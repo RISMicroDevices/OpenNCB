@@ -1,0 +1,3 @@
+[submodule "external/rocket-chip"]
+	path = external/rocket-chip
+	url = https://github.com/OpenXiangShan/rocket-chip
