@@ -56,4 +56,8 @@ trait CHISNFOpcodesREQ extends WithCHIParameters {
     //  -------------------------------------------------------------------------------------
     val PrefetchTgt                 = CHIOpcode(REQ, 0x3A, "PrefetchTgt"                    )
     //  =====================================================================================
+
+    def isAtomic(opcode: CHIOpcode): Boolean = (opcode.opcode >= AtomicStore_ADD.opcode) && (opcode.opcode <= AtomicCompare.opcode);
+
+    def isAtomic(opcode: UInt): Bool = (opcode >= AtomicStore_ADD.U) && (opcode <= AtomicCompare.U)
 }
