@@ -13,10 +13,10 @@ class AXI4InterfaceMaster(implicit p: Parameters) extends AbstractAXI4Interface 
     // Write Interface
     val aw      = Decoupled(new AXI4BundleAW)
     val w       = Decoupled(new AXI4BundleW)
-    val b       = Decoupled(new AXI4BundleB)
+    val b       = Flipped(Decoupled(new AXI4BundleB))
 
     // Read Interface
     val ar      = Decoupled(new AXI4BundleAR)
-    val r       = Decoupled(new AXI4BundleR)
+    val r       = Flipped(Decoupled(new AXI4BundleR))
 }
 
