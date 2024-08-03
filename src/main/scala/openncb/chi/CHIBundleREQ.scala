@@ -7,9 +7,7 @@ import chisel3._
 /*
 * CHI (TX/RX) REQ channel signals bundle.
 */
-class CHIBundleREQ(implicit val p: Parameters) extends AbstractCHIBundle {
-
-    val paramCHI = p(CHIParametersKey)
+class CHIBundleREQ(implicit p: Parameters) extends AbstractCHIBundle {
 
     //  ================================================================
     val QoS             = CHIFieldUInt(paramCHI.reqQoSWidth)
@@ -98,5 +96,5 @@ class CHIBundleREQ(implicit val p: Parameters) extends AbstractCHIBundle {
     val MPAM            = CHIFieldUInt(paramCHI.reqMPAMWidth, EnumCHIIssue.E)
     //  ----------------------------------------------------------------
     val RSVDC           = CHIFieldUInt(paramCHI.reqRsvdcWidth)
-    //  ----------------------------------------------------------------
+    //  ================================================================
 }
