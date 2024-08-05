@@ -12,11 +12,17 @@ class CHIChannelSNP[+T <: CHIBundleSNP](gen: T)(implicit p: Parameters) extends 
 
 // TXSNP Channel.
 object CHIChannelTXSNP {
+
     def apply[T <: CHIBundleSNP](gen: T)(implicit p: Parameters) = new CHIChannelSNP(gen)
+
+    def apply()(implicit p: Parameters) = new CHIChannelSNP(new CHIBundleSNP)
 }
 
 // RXSNP Channel.
 object CHIChannelRXSNP {
+    
     def apply[T <: CHIBundleSNP](gen: T)(implicit p: Parameters) = Flipped(new CHIChannelSNP(gen))
+
+    def apply()(implicit p: Parameters) = Flipped(new CHIChannelSNP(new CHIBundleSNP))
 }
 

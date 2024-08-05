@@ -12,10 +12,16 @@ class CHIChannelREQ[+T <: CHIBundleREQ](gen: T)(implicit p: Parameters) extends 
 
 // TXREQ Channel.
 object CHIChannelTXREQ {
+
     def apply[T <: CHIBundleREQ](gen: T)(implicit p: Parameters) = new CHIChannelREQ(gen)
+
+    def apply()(implicit p: Parameters) = new CHIChannelREQ(new CHIBundleREQ)
 }
 
 // RXREQ Channel.
 object CHIChannelRXREQ {
+
     def apply[T <: CHIBundleREQ](gen: T)(implicit p: Parameters) = Flipped(new CHIChannelREQ(gen))
+
+    def apply()(implicit p: Parameters) = Flipped(new CHIChannelREQ(new CHIBundleREQ))
 }
