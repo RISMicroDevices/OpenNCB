@@ -58,8 +58,8 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     /*
     * Module I/O:
     * 
-    * @io input     link_active             : Link-layer Active, active when asserted,
-    *                                         typically comes from LinkActiveManager.
+    * @io input     link_state              : Link-layer State, 
+    *                                         directly comes from LinkActiveManager in general.
     * 
     * @io input     link_credit_provide     : Provide Link Credit, this was allowed to be asserted 
     *                                         before 'link_credit_ready', but credits could only be
@@ -78,10 +78,7 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     */
     val io = IO(new Bundle {
         // implementation local link-layer state signals
-        val link_stop               = Input(Bool())
-        val link_activate           = Input(Bool())
-        val link_run                = Input(Bool())
-        val link_deactivate         = Input(Bool())
+        val link_state              = Input(CHILinkActiveBundle())
 
         // implementation local credit signals
         val link_credit_provide     = Input(Bool())
@@ -100,9 +97,9 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     protected val initial_cycle_counter_R   = RegInit(0.U(maxCycleBeforeSendWidth.W))
     protected val initial_cycle_end         = initial_cycle_counter_R === cycleBeforeSend.U
     
-    when (io.link_run && !initial_cycle_end) {
+    when (io.link_state.run && !initial_cycle_end) {
         initial_cycle_counter_R := initial_cycle_counter_R + 1.U
-    }.elsewhen (io.link_deactivate) {
+    }.elsewhen (io.link_state.deactivate) {
         initial_cycle_counter_R := 0.U
     }
 
@@ -110,9 +107,9 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     protected val initial_credit_counter_R  = RegInit(0.U(linkCreditCounterWidth.W))
     protected val initial_credit_clear      = initial_credit_counter_R === initialCount.U
 
-    when (io.link_run && initial_cycle_end && !initial_credit_clear) {
+    when (io.link_state.run && initial_cycle_end && !initial_credit_clear) {
         initial_credit_counter_R    := initial_credit_counter_R + 1.U
-    }.elsewhen (io.link_deactivate) {
+    }.elsewhen (io.link_state.deactivate) {
         initial_credit_counter_R    := 0.U
     }
 
@@ -149,7 +146,7 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     *   The states from Link Active must be one-hot. 
     */
     private val linkactive_popcnt = Wire(UInt(3.W))
-    linkactive_popcnt := io.link_stop.asUInt + io.link_activate.asUInt + io.link_run.asUInt + io.link_stop.asUInt
+    linkactive_popcnt := io.link_state.stop.asUInt + io.link_state.activate.asUInt + io.link_state.run.asUInt + io.link_state.stop.asUInt
     assert(!reset.asBool || linkactive_popcnt === 1.U,
         "linkactive state must be one-hot")
 
@@ -157,14 +154,14 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     * @assertion LinkCreditConsumeOutOfRun
     *   The consuming of a Link Credit must only occur in RUN state. 
     */
-    assert(!enableMonitor.B || io.link_run || (!io.link_run && !io.monitor_credit_consume),
+    assert(!enableMonitor.B || io.link_state.run || (!io.link_state.run && !io.monitor_credit_consume),
         "link credit consume out of RUN state")
 
     /* 
     * @assertion LinkCreditReturnOutOfDeactivate
     *   The returning of a Link Credit must only occur in DEACTIVATE state.
     */
-    assert (!enableMonitor.B || io.link_deactivate || (!io.link_deactivate && !io.monitor_credit_return),
+    assert(!enableMonitor.B || io.link_state.deactivate || (!io.link_state.deactivate && !io.monitor_credit_return),
         "link credit return out of DEACTIVATE state")
     
     /*
@@ -180,6 +177,6 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     *   The 'link_credit_consume' was not allowed to be asserted when there was no 
     *   Link Credit available in the current cycle.
     */
-    assert (!enableMonitor.B || (enableMonitor.B && monitor_credit_counter_R === 0.U && !io.lcrdv),
+    assert(!enableMonitor.B || (enableMonitor.B && monitor_credit_counter_R === 0.U && !io.lcrdv),
         "link credit underflow")
 }
