@@ -6,6 +6,7 @@ import dataclass.data
 
 case class CHIParameters (
 
+    // CHI Essentials
     /*
     * issue: Issue version of CHI. 
     * 
@@ -25,7 +26,10 @@ case class CHIParameters (
     * -------------------------------------------------------------------
     */
     issue               : EnumCHIIssue      = EnumCHIIssue.B,
+    //
 
+
+    // CHI Flit configurations
     /*
     * nodeIdWidth: Width of Node ID (NodeID_Width)
     * 
@@ -75,6 +79,7 @@ case class CHIParameters (
     * mpamPresent: Support for REQ.MPAM and SNP.MPAM field (MPAM_Support)
     */
     mpamPresent         : Boolean           = false
+    //
 )
 /*
 * Elaborated width of all CHI Flit fields.
