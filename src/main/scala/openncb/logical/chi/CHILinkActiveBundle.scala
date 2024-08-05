@@ -1,4 +1,4 @@
-package cn.rismd.openncb.logical
+package cn.rismd.openncb.logical.chi
 
 import chisel3._
 
