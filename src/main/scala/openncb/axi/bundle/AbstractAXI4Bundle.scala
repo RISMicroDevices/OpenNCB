@@ -1,4 +1,4 @@
-package cn.rismd.openncb.axi
+package cn.rismd.openncb.axi.bundle
 
 import chisel3.Bundle
 

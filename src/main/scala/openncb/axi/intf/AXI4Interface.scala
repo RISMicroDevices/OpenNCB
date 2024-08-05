@@ -1,8 +1,9 @@
-package cn.rismd.openncb.axi
+package cn.rismd.openncb.axi.intf
 
 import org.chipsalliance.cde.config.Parameters
 import chisel3._
 import chisel3.util.Decoupled
+import cn.rismd.openncb.axi.bundle._
 
 
 /*

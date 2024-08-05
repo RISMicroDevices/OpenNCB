@@ -1,4 +1,4 @@
-package cn.rismd.openncb.axi
+package cn.rismd.openncb.axi.intf
 
 import chisel3.Bundle
 import org.chipsalliance.cde.config.Parameters
