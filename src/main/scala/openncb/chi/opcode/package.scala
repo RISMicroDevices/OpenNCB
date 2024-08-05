@@ -1,8 +1,8 @@
-package cn.rismd.openncb
+package cn.rismd.openncb.chi
 
 import chisel3.UInt
 
-package object chi {
+package object opcode {
 
     /*
     * Convert to literal UInt instance with the width of originally specified

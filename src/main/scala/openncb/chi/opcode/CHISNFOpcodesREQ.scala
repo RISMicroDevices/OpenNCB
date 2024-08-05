@@ -1,6 +1,7 @@
-package cn.rismd.openncb.chi
+package cn.rismd.openncb.chi.opcode
 
 import chisel3._
+import cn.rismd.openncb.chi._
 import cn.rismd.openncb.chi.EnumCHIIssue._
 import cn.rismd.openncb.chi.EnumCHIChannel._
 

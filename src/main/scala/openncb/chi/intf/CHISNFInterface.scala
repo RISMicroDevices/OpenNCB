@@ -2,6 +2,7 @@ package cn.rismd.openncb.chi
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
+import cn.rismd.openncb.chi.channel._
 
 
 /*
