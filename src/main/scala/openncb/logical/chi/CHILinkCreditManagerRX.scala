@@ -29,11 +29,10 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
                              val initialCount       : Int       = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
                              val cycleBeforeSend    : Int       = 100,
                              val enableMonitor      : Boolean   = false)
-                            (implicit p: Parameters)
         extends AbstractCHILinkCreditManager {
 
     // local parameters
-    protected def linkCreditCounterWidth    : Int   = log2Up(maxCount)
+    protected def linkCreditCounterWidth    : Int   = log2Up(maxCount + 1)
 
     protected def maxCycleBeforeSend        : Int   = 255
 
@@ -69,8 +68,7 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     * @io input     monitor_credit_consume  : Link Credit Consume for monitor, this was only useful
     *                                         when 'enableMonitor' was set to {@value true}.
     *                                         In general, connects to RX*FLITV.
-    *                                         Otherwise, you could leave this signal unconnected, or
-    *                                         tie it to {@value zero}.
+    *                                         Otherwise, tie it to {@value zero} when unused.
     * @io input     monitor_credit_return   : Link Credit Return for monitor.
     *                                         For connection {@see #monitor_credit_consume}.
     *
@@ -85,8 +83,8 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
         val link_credit_ready       = Output(Bool())
 
         // monitor local signals
-        val monitor_credit_return   = Input(WireInit(init = false.B))
-        val monitor_credit_consume  = Input(WireInit(init = false.B))
+        val monitor_credit_return   = Input(Bool())
+        val monitor_credit_consume  = Input(Bool())
 
         // CHI link-layer signals
         val lcrdv                   = Output(Bool())
@@ -128,16 +126,14 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
 
 
     // monitor logic
-    protected val monitor_credit_counter_next   = Wire(UInt(linkCreditCounterWidth.W))
-    protected val monitor_credit_counter_R      = RegEnable(
-        /*next   = */ monitor_credit_counter_next,
-        /*init   = */ 0.U, 
-        /*enable = */ enableMonitor.B)
+    protected val monitor_credit_counter_R      = RegInit(0.U(linkCreditCounterWidth.W))
 
-    when (io.lcrdv && !io.monitor_credit_consume && !io.monitor_credit_return) {
-        monitor_credit_counter_next := monitor_credit_counter_R + 1.U
-    }.elsewhen (!io.lcrdv && (io.monitor_credit_consume || io.monitor_credit_return)) {
-        monitor_credit_counter_next := monitor_credit_counter_R - 1.U
+    if (enableMonitor) {
+        when (io.lcrdv && !io.monitor_credit_consume && !io.monitor_credit_return) {
+            monitor_credit_counter_R := monitor_credit_counter_R + 1.U
+        }.elsewhen (!io.lcrdv && (io.monitor_credit_consume || io.monitor_credit_return)) {
+            monitor_credit_counter_R := monitor_credit_counter_R - 1.U
+        }
     }
 
     // assertions

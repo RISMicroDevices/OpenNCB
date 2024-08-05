@@ -16,11 +16,10 @@ import chisel3.util.RegEnable
 *                   {@see cn.rismd.openncb.chi.CHIConstants#CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}
 */
 class CHILinkCreditManagerTX(val maxCount           : Int   = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT)
-                            (implicit p: Parameters)
         extends AbstractCHILinkCreditManager {
 
     // local parameters
-    protected def linkCreditCounterWidth: Int = log2Up(maxCount)
+    protected def linkCreditCounterWidth: Int = log2Up(maxCount + 1)
 
 
     // variable checks

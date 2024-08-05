@@ -7,8 +7,7 @@ import org.chipsalliance.cde.config.Parameters
 /*
 * CHI Link Active Manager for TX channels. 
 */
-class CHILinkActiveManagerTX(implicit p: Parameters)
-        extends AbstractCHILinkActiveManager {
+class CHILinkActiveManagerTX extends AbstractCHILinkActiveManager {
 
     /*
     * Module I/O:

@@ -7,8 +7,7 @@ import org.chipsalliance.cde.config.Parameters
 /*
 * CHI Link Active Manager for RX channels. 
 */
-class CHILinkActiveManagerRX(implicit p: Parameters)
-        extends AbstractCHILinkActiveManager {
+class CHILinkActiveManagerRX extends AbstractCHILinkActiveManager {
 
     /*
     * Module I/O:
