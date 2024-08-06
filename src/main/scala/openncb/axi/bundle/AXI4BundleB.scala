@@ -11,7 +11,7 @@ import cn.rismd.openncb.axi._
 class AXI4BundleB(implicit p: Parameters) extends AbstractAXI4Bundle {
 
     // id       [idWidth - 1:0]     : 'BID' - Response ID tag.
-    val id          = UInt(p(AXI4ParametersWriteChannelKey).idWidth.W)
+    val id          = UInt(p(AXI4ParametersKey).idWidth.W)
 
     // resp     [1:0]               : 'BRESP' - Write response.
     val resp        = UInt(2.W)
@@ -23,5 +23,5 @@ class AXI4BundleB(implicit p: Parameters) extends AbstractAXI4Bundle {
     * @return {@code freechips.rocketchip.amba.axi4.AXI4BundleB}
     */
     def asRocketChip = new freechips.rocketchip.amba.axi4.AXI4BundleB(
-        p(AXI4ParametersWriteChannelKey).asRocketChip)
+        p(AXI4ParametersKey).asRocketChip)
 }

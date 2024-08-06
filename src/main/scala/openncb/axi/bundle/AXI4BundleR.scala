@@ -11,10 +11,10 @@ import cn.rismd.openncb.axi._
 class AXI4BundleR(implicit p: Parameters) extends AbstractAXI4Bundle {
 
     // id       [idWidth - 1:0]     : 'RID' - Read ID tag.
-    val id          = UInt(p(AXI4ParametersReadChannelKey).idWidth.W)
+    val id          = UInt(p(AXI4ParametersKey).idWidth.W)
 
     // data     [dataWidth - 1:0]   : 'RDATA' - Read data.
-    val data        = UInt(p(AXI4ParametersReadChannelKey).dataWidth.W)
+    val data        = UInt(p(AXI4ParametersKey).dataWidth.W)
 
     // resp     [1:0]               : 'RRESP' - Read response.
     val resp        = UInt(2.W)
@@ -29,5 +29,5 @@ class AXI4BundleR(implicit p: Parameters) extends AbstractAXI4Bundle {
     * @return {@code freechips.rocketchip.amba.axi4.AXI4BundleR}
     */
     def asRocketChip = new freechips.rocketchip.amba.axi4.AXI4BundleR(
-        p(AXI4ParametersReadChannelKey).asRocketChip)
+        p(AXI4ParametersKey).asRocketChip)
 }

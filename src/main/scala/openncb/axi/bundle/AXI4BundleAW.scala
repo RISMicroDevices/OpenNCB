@@ -11,10 +11,10 @@ import cn.rismd.openncb.axi._
 class AXI4BundleAW(implicit p: Parameters) extends AbstractAXI4Bundle {
 
     // id       [idWidth - 1:0]     : 'AWID' - Write address ID.
-    val id          = UInt(p(AXI4ParametersWriteChannelKey).idWidth.W)
+    val id          = UInt(p(AXI4ParametersKey).idWidth.W)
 
     // addr     [addrWidth - 1:0]   : 'AWADDR' - Write address.
-    val addr        = UInt(p(AXI4ParametersWriteChannelKey).addrWidth.W)
+    val addr        = UInt(p(AXI4ParametersKey).addrWidth.W)
 
     // len      [7:0]               : 'AWLEN' - Burst length.
     val len         = UInt(8.W)
@@ -47,5 +47,5 @@ class AXI4BundleAW(implicit p: Parameters) extends AbstractAXI4Bundle {
     * @return {@code freechips.rocketchip.amba.axi4.AXI4BundleAW}
     */
     def asRocketChip = new freechips.rocketchip.amba.axi4.AXI4BundleAW(
-        p(AXI4ParametersWriteChannelKey).asRocketChip)
+        p(AXI4ParametersKey).asRocketChip)
 }
