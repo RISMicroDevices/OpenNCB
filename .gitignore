@@ -7,3 +7,6 @@ build/
 .bloop/
 .metals/
 .vscode/
+.local/
+local/
+.shared/
