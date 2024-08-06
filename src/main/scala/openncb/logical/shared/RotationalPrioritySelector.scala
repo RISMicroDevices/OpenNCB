@@ -69,7 +69,7 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
 
         // selection logic
         protected val select = Wire(Bool())
-        select := io.upper_in_select && io.lower_l_in_valid
+        select := (io.upper_in_select && io.lower_l_in_valid) || !io.lower_r_in_valid
 
         //
         io.upper_out_valid  := io.lower_l_in_valid | io.lower_r_in_valid
