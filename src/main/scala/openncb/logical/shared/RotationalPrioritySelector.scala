@@ -6,10 +6,56 @@ import chisel3.util.Cat
 import chisel3.util.log2Up
 
 
+/*
+* Rotational Priority Selector.
+* 
+* * Generating selection index from 'valid' vector with dynamic-linear priority
+*   with bi-directional binary tree propagation.
+* 
+* * The index is generated with the propagation of binary tree, starts with 0.
+* 
+* * For examples of 14 input 'valid's:
+*   ----------------------------------------------------------------
+*        [ <-- 0                13 --> ]
+*   valid: 0 1 1 0 1 1 0 1 0 0 0 0 0 1 
+*   head :         ^                   
+*                  |                   
+*   selected_valid: 1
+*   selected_index: 4
+*   ----------------------------------------------------------------
+*        [ <-- 0                13 --> ]
+*   valid: 0 1 1 1 1 0 0 0 1 0 0 0 0 0 
+*   head :                       ^     
+*                                |     
+*   selected_valid: 1
+*   selected_index: 1
+*   ----------------------------------------------------------------
+*        [ <-- 0                                                           13 --> ]
+*   valid: [ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 0 ][ 1 ][ 0 ] 
+*   head :                  ^             
+*                           |             
+*   prior: (  2)(  1)(  0)( 13)( 12)( 11)( 10)(  9)(  8)(  7)(  6)(  5)(  4)(  3)
+*   selected_valid: 1
+*   selected_index: 12
+*   * 'prior' stands for the current priority, higher value is higher
+*   ----------------------------------------------------------------
+* 
+* * The 'head' points to the index with the highest priority, then the priority
+*   goes down in a direction in linear. The 'index' is generated among those
+*   asserted 'valid' with the current priority.
+* 
+* @param sourceCount Count of valid source: [sourceCount - 1:0]
+*/
 class RotationalPrioritySelector(val sourceCount: Int) extends Module {
 
-    // Selector Node at Upper Layer
-    protected class NodeUpperLayer(val layer: Int, val index: Int) extends Module {
+    /*
+    * Selector Node at Upper Layer.
+    * 
+    * * Applies to nodes at height of 3 and higher (node height starts from 1).
+    * 
+    * @param layer Layer count, which is {@value heightOfNode - 2}.
+    */
+    protected class NodeUpperLayer(val layer: Int) extends Module {
         
         // Module I/O
         val io = IO(new Bundle {
@@ -51,7 +97,11 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
             Mux(select_r_reverse, selected_l_index, selected_r_index))
     }
 
-    // Selector Node at First Layer
+    /*
+    * Selector Node at First Layer.
+    * 
+    * * Applies to nodes at height of 2 (node height starts from 1).
+    */
     protected class NodeFirstLayer extends Module {
 
         // Module I/O
@@ -76,7 +126,12 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
         io.upper_out_index  := Mux(select, 1.U, 0.U)
     }
 
-    // Selector Terminal
+    /* 
+    * Selector Terminal.
+    * 
+    * * Applies to nodes at height of 1 (node height starts from 1).
+    * * Unused nodes have 'valid' hard-wired to zero. Let Synthesizer do the optimization.
+    */
     protected class Terminal extends Module {
 
         // Module I/O
@@ -102,7 +157,15 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
     require(sourceCount > 1, s"sourceCount > 1: sourceCount = ${sourceCount}")
 
 
-    // Module I/O
+    /* 
+    * Module I/O
+    * 
+    * @io input     in_valid    : Input 'valid' vector.
+    * @io input     in_head     : Input 'head', index with the highest priority.
+    * 
+    * @io output    out_valid   : Selected 'valid'.
+    * @io output    out_index   : Selected 'index'.
+    */
     val io = IO(new Bundle {
         //
         val in_valid        = Input(Vec(sourceCount, Bool()))
@@ -146,7 +209,7 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
         upperLayerNodes(0) = new Array[NodeUpperLayer](sourceCountUp >> 2)
 
         for (i <- 0 until upperLayerNodes(0).length)
-            upperLayerNodes(0)(i) = Module(new NodeUpperLayer(0, i))
+            upperLayerNodes(0)(i) = Module(new NodeUpperLayer(0))
         
         upperLayerNodes(0).zipWithIndex.foreach { case (node, i) => {
 
@@ -171,7 +234,7 @@ class RotationalPrioritySelector(val sourceCount: Int) extends Module {
                 upperLayerNodes(treeLayer) = new Array[NodeUpperLayer](treeWidth)
 
                 for (i <- 0 until upperLayerNodes(treeLayer).length) 
-                    upperLayerNodes(treeLayer)(i) = Module(new NodeUpperLayer(treeLayer, i))
+                    upperLayerNodes(treeLayer)(i) = Module(new NodeUpperLayer(treeLayer))
                 
                 upperLayerNodes(treeLayer).zipWithIndex.foreach { case (node, i) => {
 
