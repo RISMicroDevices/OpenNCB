@@ -90,6 +90,27 @@ case class CHIParameters (
         throw new IllegalArgumentException(s"unknown or unsupported CHI Issue: ${issue}")
     //
 
+    //
+    require(nodeIdWidth >= 7 && nodeIdWidth <= 11,
+        s"Legal values of 'nodeIdWidth' are 7 to 11: nodeIdWidth = ${nodeIdWidth}")
+
+    require(reqAddrWidth >= 44 && reqAddrWidth <= 52,
+        s"Legal values of 'reqAddrWidth' are 44 to 52: reqAddrWidth = ${reqAddrWidth}")
+
+    require(dataWidth == 128 || dataWidth == 256 || dataWidth == 512,
+        s"Legal values of 'dataWidth' are 128, 256 and 512: dataWidth = ${dataWidth}")
+
+    require(datRsvdcWidth == 0 || datRsvdcWidth == 4  || datRsvdcWidth == 8
+                               || datRsvdcWidth == 12 || datRsvdcWidth == 16
+                               || datRsvdcWidth == 24 || datRsvdcWidth == 32,
+        s"Legal values of 'datRsvdcWidth' are 0 or 4, 8, 12, 16, 24, 32: datRsvdcWidth = ${datRsvdcWidth}")
+
+    require(reqRsvdcWidth == 0 || reqRsvdcWidth == 4  || reqRsvdcWidth == 8
+                               || reqRsvdcWidth == 12 || reqRsvdcWidth == 16
+                               || reqRsvdcWidth == 24 || reqRsvdcWidth == 32,
+        s"Legal values of 'reqRsvdcWidth' are 0 or 4, 8, 12, 16, 24, 32: reqRsvdcWidth = ${reqRsvdcWidth}")
+    //
+
 
     /*
     * REQ Flit fields width.
