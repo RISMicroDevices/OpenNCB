@@ -5,7 +5,21 @@ import org.chipsalliance.cde.config.Field
 
 case class NCBParameters (
 
-    //
+    // NCB Parameters
+    /* 
+    * outstandingDepth: Configure the outstanding depth of CHI transactions of NCB.
+    * 
+    * * By default, {@code outstandingDepth} is set to the maximum value, 
+    *   which is {@value 15}.
+    * 
+    * * The legal value for {@code outstandingDepth} was 1 to 15, determined by the
+    *   AMBA CHI specification. The outstanding status are controlled by CHI Link Credit.
+    */
+    outstandingDepth        : Int           = 15,
+
+
+
+    // TODO
 
 
 
@@ -64,7 +78,12 @@ case class NCBParameters (
     *   Normal Non-cacheable Non-bufferable Memory.
     */
     axiAWBufferable         : Boolean       = false
-)
+) {
+
+    require(outstandingDepth >= 1 && outstandingDepth <= 15, 
+        s"The legal value for 'outstandingDepth' was 1 to 15, by the AMBA CHI specification: " +
+        s"outstandingDepth = ${outstandingDepth}")
+}
 
 
 case object NCBParametersKey extends Field[NCBParameters]
