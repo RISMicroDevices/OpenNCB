@@ -10,3 +10,4 @@ build/
 .local/
 local/
 .shared/
+*.log
