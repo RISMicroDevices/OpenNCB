@@ -12,59 +12,59 @@ class CHILinkActiveManagerRX extends AbstractCHILinkActiveManager {
     /*
     * Module I/O:
     *
-    * @io output    link_state      : Link-layer state.
+    * @io output    linkState       : Link-layer state.
     * 
-    * @io output    go_run_valid    : Request to go to state RUN.
-    * @io input     go_run_ready    : Ready to go to state RUN.
+    * @io output    goRunValid      : Request to go to state RUN.
+    * @io input     goRunReady      : Ready to go to state RUN.
     * 
-    * @io output    go_stop_valid   : Request to go to state STOP.
-    * @io input     go_stop_ready   : Ready to go to state STOP.
+    * @io output    goStopValid     : Request to go to state STOP.
+    * @io input     goStopReady     : Ready to go to state STOP.
     * 
-    * @io input     linkactive_req  : LINKACTIVEREQ.
-    * @io output    linkactive_ack  : LINKACTIVEACK.
+    * @io input     linkactiveReq  : LINKACTIVEREQ.
+    * @io output    linkactiveAck  : LINKACTIVEACK.
     */
     val io = IO(new Bundle {
         // implementation local link-layer state signals
-        val link_state              = Output(CHILinkActiveBundle())
+        val linkState               = Output(CHILinkActiveBundle())
 
         // implementation local link-layer state transition signals
-        val go_run_valid            = Output(Bool())
-        val go_run_ready            = Input(Bool())
+        val goRunValid              = Output(Bool())
+        val goRunReady              = Input(Bool())
 
-        val go_stop_valid           = Output(Bool())
-        val go_stop_ready           = Input(Bool())
+        val goStopValid             = Output(Bool())
+        val goStopReady             = Input(Bool())
 
         // CHI link-layer signals
-        val linkactive_req          = Input(Bool())
-        val linkactive_ack          = Output(Bool())
+        val linkactiveReq           = Input(Bool())
+        val linkactiveAck           = Output(Bool())
     })
 
     
     // input register of LINKACTIVEREQ
-    protected val linkactive_req_R  = RegNext(next = io.linkactive_req, init = false.B)
+    protected val regLinkactiveReq = RegNext(next = io.linkactiveReq, init = false.B)
 
     // output register of LINKACTIVEACK
-    protected val linkactive_ack_R  = RegInit(init = false.B)
+    protected val regLinkactiveAck  = RegInit(init = false.B)
 
     // 
-    protected val to_go_run     =  linkactive_req_R && !linkactive_ack_R
-    protected val to_go_stop    = !linkactive_req_R &&  linkactive_ack_R
+    protected val logicToGoRun  =  regLinkactiveReq && !regLinkactiveAck
+    protected val logicToGoStop = !regLinkactiveReq &&  regLinkactiveAck
 
-    when (to_go_run && io.go_run_ready) {
-        linkactive_ack_R := true.B
-    }.elsewhen (to_go_stop && io.go_stop_ready) {
-        linkactive_ack_R := false.B
+    when (logicToGoRun && io.goRunReady) {
+        regLinkactiveAck := true.B
+    }.elsewhen (logicToGoStop && io.goStopReady) {
+        regLinkactiveAck := false.B
     }
 
 
     // link-layer state output
-    io.link_state.from(linkactive_req_R, linkactive_ack_R)
+    io.linkState.from(regLinkactiveReq, regLinkactiveAck)
 
     // link-layer state transition output
-    io.go_run_valid     := to_go_run
-    io.go_stop_valid    := to_go_stop
+    io.goRunValid     := logicToGoRun
+    io.goStopValid    := logicToGoStop
 
 
     // CHI link-layer output
-    io.linkactive_ack   := linkactive_ack_R
+    io.linkactiveAck   := regLinkactiveAck
 }

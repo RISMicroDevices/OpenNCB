@@ -12,27 +12,29 @@ import chisel3.util.RegEnable
 * 
 * * Supported Link-Layer states: STOP, ACT, RUN, DEACT.
 * 
-* @param maxCount   Specify the maximum grantable link credit count, By default,
-*                   {@see cn.rismd.openncb.chi.CHIConstants#CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}
-*                   This parameter might not be useful when {@code enableMonitor} was set to 
-*                   {@value false}. In general, this value was used by assertion monitors on
-*                   RX sides, which only send Link Credits. And the checking logic was natural
-*                   to be put in receiver logics. 
+* @param paramMaxCount  Specify the maximum grantable link credit count, By default,
+*                       {@see cn.rismd.openncb.chi.CHIConstants#CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}
+*                       This parameter might not be useful when {@code paramEnableMonitor} was set to 
+*                       {@value false}. In general, this value was used by assertion monitors on
+*                       RX sides, which only send Link Credits. And the checking logic was natural
+*                       to be put in receiver logics. 
 * 
-* @param cycleBeforeSend    Specify the interval cycle count after Link Active before sending 
-*                           the first Link Credit. The supported max value is 255.
+* @param paramInitialCount  Specify the initial link credit count that would be sent after reset.
 * 
-* @param enableMonitor  Specify whether the Link Credit assertion monitor was enabled on the
-*                       sending side. 
+* @param paramCycleBeforeSend   Specify the interval cycle count after Link Active before sending 
+*                               the first Link Credit. The supported max value is 255.
+* 
+* @param paramEnableMonitor Specify whether the Link Credit assertion monitor was enabled on the
+*                           sending side. 
 */
-class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
-                             val initialCount       : Int       = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
-                             val cycleBeforeSend    : Int       = 100,
-                             val enableMonitor      : Boolean   = false)
+class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
+                             val paramInitialCount      : Int       = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
+                             val paramCycleBeforeSend   : Int       = 100,
+                             val paramEnableMonitor     : Boolean   = false)
         extends AbstractCHILinkCreditManager {
 
     // local parameters
-    protected def linkCreditCounterWidth    : Int   = log2Up(maxCount + 1)
+    protected def linkCreditCounterWidth    : Int   = log2Up(paramMaxCount + 1)
 
     protected def maxCycleBeforeSend        : Int   = 255
 
@@ -40,51 +42,51 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
 
 
     // variable checks
-    require(maxCount        >  0, s"maxCount > 0: maxCount = ${maxCount}")
-    require(initialCount    >  0, s"initialCount > 0: initialCount = ${initialCount}")
-    require(cycleBeforeSend >= 0, s"cycleBeforeSend >= 0: cycleBeforeSend = ${cycleBeforeSend}")
+    require(paramMaxCount           >  0, s"paramMaxCount > 0: paramMaxCount = ${paramMaxCount}")
+    require(paramInitialCount       >  0, s"paramInitialCount > 0: paramInitialCount = ${paramInitialCount}")
+    require(paramCycleBeforeSend    >= 0, s"paramCycleBeforeSend >= 0: paramCycleBeforeSend = ${paramCycleBeforeSend}")
 
-    require(cycleBeforeSend <= maxCycleBeforeSend,
-        s"maximum cycle before send is ${maxCycleBeforeSend}, but ${cycleBeforeSend} configured")
+    require(paramCycleBeforeSend <= maxCycleBeforeSend,
+        s"maximum cycle before send is ${maxCycleBeforeSend}, but ${paramCycleBeforeSend} configured")
 
-    require(maxCount <= CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
-        s"max maximum link credit count is ${CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}, but ${maxCount} configured")
+    require(paramMaxCount <= CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
+        s"max maximum link credit count is ${CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}, but ${paramMaxCount} configured")
 
-    require(initialCount <= maxCount, 
-        s"maximum link credit count is ${maxCount}, but ${initialCount} initial credit(s) configured")
+    require(paramInitialCount <= paramMaxCount, 
+        s"maximum link credit count is ${paramMaxCount}, but ${paramInitialCount} initial credit(s) configured")
 
 
     /*
     * Module I/O:
     * 
-    * @io input     link_state              : Link-layer State, 
+    * @io input     linkState               : Link-layer State, 
     *                                         directly comes from LinkActiveManager in general.
     * 
-    * @io input     link_credit_provide     : Provide Link Credit, this was allowed to be asserted 
-    *                                         before 'link_credit_ready', but credits could only be
-    *                                         accepted when 'link_credit_ready' asserted.
-    * @io output    link_credit_ready       : Link Credit send ready.
+    * @io input     linkCreditProvide       : Provide Link Credit, this was allowed to be asserted 
+    *                                         before 'linkCreditReady', but credits could only be
+    *                                         accepted when 'linkCreditReady' asserted.
+    * @io output    linkCreditReady         : Link Credit send ready.
     * 
-    * @io input     monitor_credit_consume  : Link Credit Consume for monitor, this was only useful
-    *                                         when 'enableMonitor' was set to {@value true}.
+    * @io input     monitorCreditConsume    : Link Credit Consume for monitor, this was only useful
+    *                                         when 'paramEnableMonitor' was set to {@value true}.
     *                                         In general, connects to RX*FLITV.
     *                                         Otherwise, tie it to {@value zero} when unused.
-    * @io input     monitor_credit_return   : Link Credit Return for monitor.
-    *                                         For connection {@see #monitor_credit_consume}.
+    * @io input     monitorCreditReturn     : Link Credit Return for monitor.
+    *                                         For connection {@see #monitorCreditConsume}.
     *
     * @io output    lcrdv                   : Link Credit Valid, connects to RX*LCRDV
     */
     val io = IO(new Bundle {
         // implementation local link-layer state signals
-        val link_state              = Input(CHILinkActiveBundle())
+        val linkState               = Input(CHILinkActiveBundle())
 
         // implementation local credit signals
-        val link_credit_provide     = Input(Bool())
-        val link_credit_ready       = Output(Bool())
+        val linkCreditProvide       = Input(Bool())
+        val linkCreditReady         = Output(Bool())
 
         // monitor local signals
-        val monitor_credit_return   = Input(Bool())
-        val monitor_credit_consume  = Input(Bool())
+        val monitorCreditReturn     = Input(Bool())
+        val monitorCreditConsume  = Input(Bool())
 
         // CHI link-layer signals
         val lcrdv                   = Output(Bool())
@@ -92,47 +94,47 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
 
 
     // Link Credit interval cycle counter
-    protected val initial_cycle_counter_R   = RegInit(0.U(maxCycleBeforeSendWidth.W))
-    protected val initial_cycle_end         = initial_cycle_counter_R === cycleBeforeSend.U
+    protected val regInitialCycleCounter    = RegInit(0.U(maxCycleBeforeSendWidth.W))
+    protected val logicInitialCycleEnd      = regInitialCycleCounter === paramCycleBeforeSend.U
     
-    when (io.link_state.run && !initial_cycle_end) {
-        initial_cycle_counter_R := initial_cycle_counter_R + 1.U
-    }.elsewhen (io.link_state.deactivate) {
-        initial_cycle_counter_R := 0.U
+    when (io.linkState.run && !logicInitialCycleEnd) {
+        regInitialCycleCounter := regInitialCycleCounter + 1.U
+    }.elsewhen (io.linkState.deactivate) {
+        regInitialCycleCounter := 0.U
     }
 
     // Link Credit initial counter
-    protected val initial_credit_counter_R  = RegInit(0.U(linkCreditCounterWidth.W))
-    protected val initial_credit_clear      = initial_credit_counter_R === initialCount.U
+    protected val regInitialCreditCounter   = RegInit(0.U(linkCreditCounterWidth.W))
+    protected val logicInitialCreditClear   = regInitialCreditCounter === paramInitialCount.U
 
-    when (io.link_state.run && initial_cycle_end && !initial_credit_clear) {
-        initial_credit_counter_R    := initial_credit_counter_R + 1.U
-    }.elsewhen (io.link_state.deactivate) {
-        initial_credit_counter_R    := 0.U
+    when (io.linkState.run && logicInitialCycleEnd && !logicInitialCreditClear) {
+        regInitialCreditCounter     := regInitialCreditCounter + 1.U
+    }.elsewhen (io.linkState.deactivate) {
+        regInitialCreditCounter     := 0.U
     }
 
     //
-    protected val initial_credit_done   = initial_cycle_end && initial_credit_clear
+    protected val logicInitialCreditDone    = logicInitialCycleEnd && logicInitialCreditClear
 
     // output register of Link Credit Valid
-    protected val lcrdv_R   = RegNext(
+    protected val regLcrdv  = RegNext(
         init = 0.B, 
-        next = Mux(initial_credit_done, io.link_credit_provide, initial_cycle_end))
+        next = Mux(logicInitialCreditDone, io.linkCreditProvide, logicInitialCycleEnd))
 
 
     // module output
-    io.link_credit_ready    := initial_credit_done
-    io.lcrdv                := lcrdv_R
+    io.linkCreditReady      := logicInitialCreditDone
+    io.lcrdv                := regLcrdv
 
 
     // monitor logic
-    protected val monitor_credit_counter_R      = RegInit(0.U(linkCreditCounterWidth.W))
+    protected val debugRegMonitorCreditCounter  = RegInit(0.U(linkCreditCounterWidth.W))
 
-    if (enableMonitor) {
-        when (io.lcrdv && !io.monitor_credit_consume && !io.monitor_credit_return) {
-            monitor_credit_counter_R := monitor_credit_counter_R + 1.U
-        }.elsewhen (!io.lcrdv && (io.monitor_credit_consume || io.monitor_credit_return)) {
-            monitor_credit_counter_R := monitor_credit_counter_R - 1.U
+    if (paramEnableMonitor) {
+        when (io.lcrdv && !io.monitorCreditConsume && !io.monitorCreditReturn) {
+            debugRegMonitorCreditCounter := debugRegMonitorCreditCounter + 1.U
+        }.elsewhen (!io.lcrdv && (io.monitorCreditConsume || io.monitorCreditReturn)) {
+            debugRegMonitorCreditCounter := debugRegMonitorCreditCounter - 1.U
         }
     }
 
@@ -141,23 +143,23 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     * @assertion LinkActiveStateOneHot
     *   The states from Link Active must be one-hot. 
     */
-    private val linkactive_popcnt = Wire(UInt(3.W))
-    linkactive_popcnt := io.link_state.stop.asUInt + io.link_state.activate.asUInt + io.link_state.run.asUInt + io.link_state.stop.asUInt
-    assert(!reset.asBool || linkactive_popcnt === 1.U,
+    private val debugLogicLinkactivePopcnt  = Wire(UInt(3.W))
+    debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
+    assert(!reset.asBool || debugLogicLinkactivePopcnt === 1.U,
         "linkactive state must be one-hot")
 
     /* 
     * @assertion LinkCreditConsumeOutOfRun
     *   The consuming of a Link Credit must only occur in RUN state. 
     */
-    assert(!enableMonitor.B || io.link_state.run || (!io.link_state.run && !io.monitor_credit_consume),
+    assert(!paramEnableMonitor.B || io.linkState.run || (!io.linkState.run && !io.monitorCreditConsume),
         "link credit consume out of RUN state")
 
     /* 
     * @assertion LinkCreditReturnOutOfDeactivate
     *   The returning of a Link Credit must only occur in DEACTIVATE state.
     */
-    assert(!enableMonitor.B || io.link_state.deactivate || (!io.link_state.deactivate && !io.monitor_credit_return),
+    assert(!paramEnableMonitor.B || io.linkState.deactivate || (!io.linkState.deactivate && !io.monitorCreditReturn),
         "link credit return out of DEACTIVATE state")
     
     /*
@@ -165,7 +167,7 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    assert(!enableMonitor.B || (enableMonitor.B && monitor_credit_counter_R === maxCount.U && !io.lcrdv),
+    assert(!paramEnableMonitor.B || (paramEnableMonitor.B && debugRegMonitorCreditCounter === paramMaxCount.U && !io.lcrdv),
         "link credit overflow")
 
     /*
@@ -173,6 +175,6 @@ class CHILinkCreditManagerRX(val maxCount           : Int       = CHI_MAX_REASON
     *   The 'link_credit_consume' was not allowed to be asserted when there was no 
     *   Link Credit available in the current cycle.
     */
-    assert(!enableMonitor.B || (enableMonitor.B && monitor_credit_counter_R === 0.U && !io.lcrdv),
+    assert(!paramEnableMonitor.B || (paramEnableMonitor.B && debugRegMonitorCreditCounter === 0.U && !io.lcrdv),
         "link credit underflow")
 }
