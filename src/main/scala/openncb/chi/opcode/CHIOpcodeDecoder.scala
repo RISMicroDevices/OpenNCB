@@ -5,6 +5,8 @@ import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi.WithCHIParameters
 import cn.rismd.openncb.chi.EnumCHIChannel
 import cn.rismd.openncb.chi.opcode.CHIOpcode
+import cn.rismd.openncb.debug.DebugBundle
+import cn.rismd.openncb.debug.DebugSignal
 
 /*
 * CHI Opcode Decoder
@@ -46,7 +48,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     /* 
     * Port I/O: debug
     */
-    class DebugPort extends Bundle {
+    class DebugPort extends DebugBundle {
         val OpcodeUnsupported       = Output(Bool())
         val OpcodeUnknown           = Output(Bool())
     }
@@ -66,6 +68,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         val decoded     = Output(Vec(paramDecodedWidth, Bool()))
 
         // debug port
+        @DebugSignal
         val debug       = new DebugPort
     })
 
