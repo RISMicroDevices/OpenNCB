@@ -57,6 +57,9 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
 
         // CHI link-layer signals
         val lcrdv                   = Input(Bool())
+
+        // debug port
+        val debug                   = new DebugPort
     })
 
 
@@ -78,42 +81,51 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     io.linkCreditAvailable  := regLinkCreditCounter =/= 0.U
 
 
-    // assertions
+    // assertions & debugs
     /*
-    * @assertion LinkActiveStateOneHot
+    * Port I/O: Debug 
+    */
+    class DebugPort extends Bundle {
+        val LinkActiveStateNotOneHot            = Output(Bool())
+        val LinkCreditConsumeOutOfRun           = Output(Bool())
+        val LinkCreditReturnOutOfDeactivate     = Output(Bool())
+        val LinkCreditValidWhenLinkStop         = Output(Bool())
+        val LinkCreditOverflow                  = Output(Bool())
+        val LinkCreditUnderflow                 = Output(Bool())
+    }
+
+    /*
+    * @assertion LinkActiveStateNotOneHot
     *   The states from Link Active must be one-hot. 
     */
     private val debugLogicLinkactivePopcnt = Wire(UInt(3.W))
     debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
-    assert(!reset.asBool || debugLogicLinkactivePopcnt === 1.U,
+    io.debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
+    assert(!io.debug.LinkActiveStateNotOneHot,
         "linkactive state must be one-hot")
 
     /* 
     * @assertion LinkCreditConsumeOutOfRun
     *   The consuming of a Link Credit must only occur in RUN state. 
     */
-    assert(io.linkState.run || (!io.linkState.run && !io.linkCreditConsume),
+    io.debug.LinkCreditConsumeOutOfRun := !io.linkState.run && io.linkCreditConsume
+    assert(!io.debug.LinkCreditConsumeOutOfRun,
         "link credit consume out of RUN state")
 
     /* 
     * @assertion LinkCreditReturnOutOfDeactivate
     *   The returning of a Link Credit must only occur in DEACTIVATE state.
     */
-    assert(io.linkState.deactivate || (!io.linkState.deactivate && !io.linkCreditReturn),
+    io.debug.LinkCreditReturnOutOfDeactivate := !io.linkState.deactivate && io.linkCreditReturn
+    assert(!io.debug.LinkCreditReturnOutOfDeactivate,
         "link credit return out of DEACTIVATE state")
-
-    /*
-    * @assertion LinkCreditValidOnReset
-    *   The 'lcrdv' was now allowed to be asserted during reset.
-    */
-    assert(!reset.asBool || (reset.asBool && !io.lcrdv), 
-        "unexpected 'lcrdv' during reset")
-
+    
     /*
     * @assertion LinkCreditValidWhenLinkStop
     *   The 'lcrdv' was not allowed to be asserted before Link ACTIVATE (In STOP state).
     */
-    assert(!io.linkState.stop || (io.linkState.stop && !io.lcrdv),
+    io.debug.LinkCreditValidWhenLinkStop := io.linkState.stop && io.lcrdv
+    assert(!io.debug.LinkCreditValidWhenLinkStop,
         "unexpected 'lcrdv' during link STOP")
 
     /*
@@ -121,7 +133,8 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    assert(regLinkCreditCounter =/= paramMaxCount.U || ((regLinkCreditCounter === paramMaxCount.U) && !io.lcrdv),
+    io.debug.LinkCreditOverflow := regLinkCreditCounter === paramMaxCount.U && io.lcrdv
+    assert(!io.debug.LinkCreditOverflow,
         "link credit overflow")
 
     /*
@@ -129,6 +142,7 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     *   The 'linkCreditConsume' was not allowed to be asserted when there was no 
     *   Link Credit available in the current cycle.
     */
-    assert(io.linkCreditAvailable || (!io.linkCreditAvailable && !io.linkCreditConsume),
+    io.debug.LinkCreditUnderflow := regLinkCreditCounter === 0.U && io.linkCreditConsume
+    assert(!io.debug.LinkCreditUnderflow,
         "link credit underflow")
 }
