@@ -94,7 +94,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     })
 
     // decoding (unsupported / all) CHI Opcodes
-    var scalaSeqLogicUnsupported    = Seq[Bool]()
+    protected var scalaSeqLogicUnsupported  = Seq[Bool]()
 
     paramOpcodeAll.foreach(u => {
 
@@ -126,7 +126,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     })
 
     // decoding unknown CHI Opcodes
-    var scalaSeqLogicUnknown    = Seq[Bool]()
+    protected var scalaSeqLogicUnknown  = Seq[Bool]()
 
     (0 until scalaSeqLogicDecoded.length).foreach(i => {
         if (!paramOpcodeAll.map(u => u.applicable && u.is(i)).reduce(_ || _))
