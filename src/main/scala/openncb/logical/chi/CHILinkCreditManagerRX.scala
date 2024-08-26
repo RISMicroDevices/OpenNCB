@@ -34,11 +34,11 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
         extends AbstractCHILinkCreditManager {
 
     // local parameters
-    protected def linkCreditCounterWidth    : Int   = log2Up(paramMaxCount + 1)
+    protected def paramLinkCreditCounterWidth   : Int   = log2Up(paramMaxCount + 1)
 
-    protected def maxCycleBeforeSend        : Int   = 255
+    protected def parmaMaxCycleBeforeSend       : Int   = 255
 
-    protected def maxCycleBeforeSendWidth   : Int   = log2Up(maxCycleBeforeSend)
+    protected def paramMaxCycleBeforeSendWidth  : Int   = log2Up(parmaMaxCycleBeforeSend)
 
 
     // variable checks
@@ -46,8 +46,8 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     require(paramInitialCount       >  0, s"paramInitialCount > 0: paramInitialCount = ${paramInitialCount}")
     require(paramCycleBeforeSend    >= 0, s"paramCycleBeforeSend >= 0: paramCycleBeforeSend = ${paramCycleBeforeSend}")
 
-    require(paramCycleBeforeSend <= maxCycleBeforeSend,
-        s"maximum cycle before send is ${maxCycleBeforeSend}, but ${paramCycleBeforeSend} configured")
+    require(paramCycleBeforeSend <= parmaMaxCycleBeforeSend,
+        s"maximum cycle before send is ${parmaMaxCycleBeforeSend}, but ${paramCycleBeforeSend} configured")
 
     require(paramMaxCount <= CHI_MAX_REASONABLE_LINK_CREDIT_COUNT,
         s"max maximum link credit count is ${CHI_MAX_REASONABLE_LINK_CREDIT_COUNT}, but ${paramMaxCount} configured")
@@ -86,15 +86,18 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
 
         // monitor local signals
         val monitorCreditReturn     = Input(Bool())
-        val monitorCreditConsume  = Input(Bool())
+        val monitorCreditConsume    = Input(Bool())
 
         // CHI link-layer signals
         val lcrdv                   = Output(Bool())
+
+        // debug port
+        val debug                   = new DebugPort
     })
 
 
     // Link Credit interval cycle counter
-    protected val regInitialCycleCounter    = RegInit(0.U(maxCycleBeforeSendWidth.W))
+    protected val regInitialCycleCounter    = RegInit(0.U(paramMaxCycleBeforeSendWidth.W))
     protected val logicInitialCycleEnd      = regInitialCycleCounter === paramCycleBeforeSend.U
     
     when (io.linkState.run && !logicInitialCycleEnd) {
@@ -104,7 +107,7 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     }
 
     // Link Credit initial counter
-    protected val regInitialCreditCounter   = RegInit(0.U(linkCreditCounterWidth.W))
+    protected val regInitialCreditCounter   = RegInit(0.U(paramLinkCreditCounterWidth.W))
     protected val logicInitialCreditClear   = regInitialCreditCounter === paramInitialCount.U
 
     when (io.linkState.run && logicInitialCycleEnd && !logicInitialCreditClear) {
@@ -128,7 +131,7 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
 
 
     // monitor logic
-    protected val debugRegMonitorCreditCounter  = RegInit(0.U(linkCreditCounterWidth.W))
+    protected val debugRegMonitorCreditCounter  = RegInit(0.U(paramLinkCreditCounterWidth.W))
 
     if (paramEnableMonitor) {
         when (io.lcrdv && !io.monitorCreditConsume && !io.monitorCreditReturn) {
@@ -138,28 +141,42 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
         }
     }
 
-    // assertions
+    // assertions & debugs
     /*
-    * @assertion LinkActiveStateOneHot
+    * Port I/O: Debug 
+    */
+    class DebugPort extends Bundle {
+        val LinkActiveStateNotOneHot            = Output(Bool())
+        val LinkCreditConsumeOutOfRun           = Output(Bool())
+        val LinkCreditReturnOutOfDeactivate     = Output(Bool())
+        val LinkCreditOverflow                  = Output(Bool())
+        val LinkCreditUnderflow                 = Output(Bool())
+    }
+
+    /*
+    * @assertion LinkActiveStateNotOneHot
     *   The states from Link Active must be one-hot. 
     */
     private val debugLogicLinkactivePopcnt  = Wire(UInt(3.W))
     debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
-    assert(!reset.asBool || debugLogicLinkactivePopcnt === 1.U,
+    io.debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
+    assert(!io.debug.LinkActiveStateNotOneHot,
         "linkactive state must be one-hot")
 
     /* 
     * @assertion LinkCreditConsumeOutOfRun
     *   The consuming of a Link Credit must only occur in RUN state. 
     */
-    assert(!paramEnableMonitor.B || io.linkState.run || (!io.linkState.run && !io.monitorCreditConsume),
+    io.debug.LinkCreditConsumeOutOfRun := paramEnableMonitor.B && (!io.linkState.run && io.monitorCreditConsume)
+    assert(!io.debug.LinkCreditConsumeOutOfRun,
         "link credit consume out of RUN state")
 
     /* 
     * @assertion LinkCreditReturnOutOfDeactivate
     *   The returning of a Link Credit must only occur in DEACTIVATE state.
     */
-    assert(!paramEnableMonitor.B || io.linkState.deactivate || (!io.linkState.deactivate && !io.monitorCreditReturn),
+    io.debug.LinkCreditReturnOutOfDeactivate := paramEnableMonitor.B && (!io.linkState.deactivate && io.monitorCreditReturn)
+    assert(!io.debug.LinkCreditReturnOutOfDeactivate,
         "link credit return out of DEACTIVATE state")
     
     /*
@@ -167,14 +184,112 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    assert(!paramEnableMonitor.B || (paramEnableMonitor.B && debugRegMonitorCreditCounter === paramMaxCount.U && !io.lcrdv),
+    io.debug.LinkCreditOverflow := paramEnableMonitor.B && (debugRegMonitorCreditCounter === paramMaxCount.U && io.lcrdv)
+    assert(!io.debug.LinkCreditOverflow,
         "link credit overflow")
 
     /*
     * @assertion LinkCreditUnderflow
-    *   The 'link_credit_consume' was not allowed to be asserted when there was no 
+    *   The 'monitorCreditConsume' was not allowed to be asserted when there was no 
     *   Link Credit available in the current cycle.
     */
-    assert(!paramEnableMonitor.B || (paramEnableMonitor.B && debugRegMonitorCreditCounter === 0.U && !io.lcrdv),
+    io.debug.LinkCreditUnderflow := paramEnableMonitor.B && debugRegMonitorCreditCounter === 0.U && io.monitorCreditConsume
+    assert(!io.debug.LinkCreditUnderflow,
         "link credit underflow")
+
+
+    /*
+    * Link Credit Provide Buffer
+    * 
+    * * Buffer for Link Credit Provide signal eliminating 'linkCreditReady'.
+    */
+    class ProvideBuffer extends Module {
+
+        /*
+        * Module I/O 
+        * 
+        * @io input     linkCreditProvide       : Provide Link Credit.
+        * 
+        * @io output    outLinkCreditProvide    : Provide Link Credit, to manager.
+        * @io input     outLinkCreditReady      : Provide Link ready, to manager.
+        */
+        val io = IO(new Bundle {
+            // link credit provide input
+            val linkCreditProvide       = Input(Bool())
+
+            // link credit provide output to manager
+            val outLinkCreditProvide    = Output(Bool())
+            val outLinkCreditReady      = Input(Bool())
+
+            // debug port
+            val debug                   = new DebugPort
+        })
+
+
+        // increase & decrease logic
+        protected val logicBufferPushReady  = io.linkCreditProvide
+        protected val logicBufferPopReady   = io.outLinkCreditReady
+
+        // Link Credit Buffering Counter
+        protected val regBufferedCreditCounter    = RegInit(0.U(paramLinkCreditCounterWidth.W))
+
+        protected val logicBufferEmpty      = regBufferedCreditCounter === 0.U
+
+        protected val logicBufferIncrease   = ( logicBufferPushReady & !logicBufferPopReady)
+        protected val logicBufferDecrease   = (!logicBufferPushReady &  logicBufferPopReady) && !logicBufferEmpty
+
+        when (logicBufferIncrease) {
+            regBufferedCreditCounter    := regBufferedCreditCounter + 1.U
+        }.elsewhen (logicBufferDecrease) {
+            regBufferedCreditCounter    := regBufferedCreditCounter - 1.U
+        }
+
+        // module output
+        io.outLinkCreditProvide := !logicBufferEmpty
+
+
+        // assertions & debugs
+        /*
+        * Port I/O: Debug 
+        */
+        class DebugPort extends Bundle {
+            val LinkCreditBufferOverflow    = Output(Bool())
+        }
+
+        /*
+        * @assertion LinkCreditBufferOverflow
+        *   The 'linkCreditProvide' was not allowed to be asserted when the Link Credit provided exceeded
+        *   the maximum number.
+        */
+        io.debug.LinkCreditBufferOverflow := logicBufferIncrease && regBufferedCreditCounter === paramMaxCount.U
+        assert(!io.debug.LinkCreditBufferOverflow,
+            "link credit buffer overflow")
+
+
+        // utility functions
+        def attach(uManager: CHILinkCreditManagerRX)    = {
+            uManager.io.linkCreditProvide   := io.outLinkCreditProvide
+            io.outLinkCreditReady           := uManager.io.linkCreditReady
+            this
+        }
+
+        def apply(uManager: CHILinkCreditManagerRX)     = attach(uManager)
+    }
+
+
+    // utiltiy functions
+    /*
+    * Create a Link Credit ProvideBuffer module instance and connect to this manager.
+    * 
+    * @return ProvideBuffer instance 
+    */
+    def attachLinkCreditProvideBuffer(): ProvideBuffer  = Module(new ProvideBuffer).attach(this)
+
+    /*
+    * Create a Link Credit ProvideBuffer module instance and connect to this manager,
+    * then extract the buffered 'linkCreditProvide' input port.
+    * 
+    * @return Wire of ProvideBuffer.linkCreditProvide 
+    */
+    def bufferedLinkCreditProvide(): Bool   = attachLinkCreditProvideBuffer().io.linkCreditProvide
 }
