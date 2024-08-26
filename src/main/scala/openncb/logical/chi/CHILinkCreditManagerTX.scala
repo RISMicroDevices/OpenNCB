@@ -5,6 +5,8 @@ import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi.CHIConstants._
 import chisel3.util.log2Up
 import chisel3.util.RegEnable
+import cn.rismd.openncb.debug.DebugBundle
+import cn.rismd.openncb.debug.DebugSignal
 
 
 /* 
@@ -59,6 +61,7 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
         val lcrdv                   = Input(Bool())
 
         // debug port
+        @DebugSignal
         val debug                   = new DebugPort
     })
 
@@ -85,7 +88,7 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     /*
     * Port I/O: Debug 
     */
-    class DebugPort extends Bundle {
+    class DebugPort extends DebugBundle {
         val LinkActiveStateNotOneHot            = Output(Bool())
         val LinkCreditConsumeOutOfRun           = Output(Bool())
         val LinkCreditReturnOutOfDeactivate     = Output(Bool())

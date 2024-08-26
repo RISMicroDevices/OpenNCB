@@ -12,6 +12,8 @@ import cn.rismd.openncb.WithNCBParameters
 import cn.rismd.openncb.util._
 import cn.rismd.openncb.chi.CHIConstants
 import chisel3.util.Cat
+import cn.rismd.openncb.debug.DebugBundle
+import cn.rismd.openncb.debug.DebugSignal
 
 
 /*
@@ -190,6 +192,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
         val free        = new FreePort
 
         // debug port
+        @DebugSignal
         val debug       = new DebugPort
     })
 
@@ -328,7 +331,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     /*
     * Port I/O: Debug 
     */
-    class DebugPort extends Bundle {
+    class DebugPort extends DebugBundle {
         val DoubleAllocationException               = Output(Bool())
         val DoubleFreeOrCorruptionException         = Output(Bool())
         val DualWriteConfliction                    = Output(Bool())
