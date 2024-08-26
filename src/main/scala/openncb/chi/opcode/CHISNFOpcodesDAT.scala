@@ -1,9 +1,11 @@
 package cn.rismd.openncb.chi.opcode
 
 import chisel3._
+import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi._
 import cn.rismd.openncb.chi.EnumCHIIssue._
 import cn.rismd.openncb.chi.EnumCHIChannel._
+import cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder
 
 
 /* 
@@ -22,4 +24,27 @@ trait CHISNFOpcodesDAT extends WithCHIParameters {
     //  -----------------------------------------------------------------------------
     val NonCopyBackWrData       = CHIOpcode(DAT, 0x03, "NonCopyBackWrData"          )
     //  =============================================================================
+
+
+    /* 
+    * Decoder for CHI Opcodes of SN-F DAT
+    * 
+    * @see {@code cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder}
+    */ 
+    class Decoder(paramOpcodeSupported          : Seq[CHIOpcode]    = Seq(),
+                  paramEnableUnsupportedCheck   : Boolean           = false)
+        (implicit p: Parameters)
+        extends CHIOpcodeDecoder(DAT, paramOpcodeSupported, Seq(
+        //  ========================
+            DataLCrdReturn,
+        //  ------------------------
+            CompData,
+        //  ------------------------
+            DataSepResp,
+        //  ------------------------
+            WriteDataCancel,
+        //  ------------------------
+            NonCopyBackWrData
+        //  ========================
+        ), paramEnableUnsupportedCheck)
 }

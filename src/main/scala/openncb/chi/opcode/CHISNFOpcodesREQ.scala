@@ -1,6 +1,7 @@
 package cn.rismd.openncb.chi.opcode
 
 import chisel3._
+import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi._
 import cn.rismd.openncb.chi.EnumCHIIssue._
 import cn.rismd.openncb.chi.EnumCHIChannel._
@@ -58,7 +59,79 @@ trait CHISNFOpcodesREQ extends WithCHIParameters {
     val PrefetchTgt                 = CHIOpcode(REQ, 0x3A, "PrefetchTgt"                    )
     //  =====================================================================================
 
-    def isAtomic(opcode: CHIOpcode): Boolean = (opcode.opcode >= AtomicStore_ADD.opcode) && (opcode.opcode <= AtomicCompare.opcode);
+    def isAtomic(opcode: CHIOpcode): Boolean 
+        = (opcode.opcode >= AtomicStore_ADD.opcode) && (opcode.opcode <= AtomicCompare.opcode)
 
-    def isAtomic(opcode: UInt): Bool = (opcode >= AtomicStore_ADD.U) && (opcode <= AtomicCompare.U)
+    def isAtomic(opcode: UInt): Bool 
+        = (opcode >= AtomicStore_ADD.U) && (opcode <= AtomicCompare.U)
+
+    def isAtomicStore(opcode: CHIOpcode): Boolean 
+        = (opcode.opcode >= AtomicStore_ADD.opcode) && (opcode.opcode <= AtomicStore_UMIN.opcode)
+
+    def isAtomicStore(opcode: UInt): Bool
+        = (opcode >= AtomicStore_ADD.U) && (opcode <= AtomicStore_UMIN.U)
+
+    def isAtomicLoad(opcode: CHIOpcode): Boolean 
+        = (opcode.opcode >= AtomicLoad_ADD.opcode) && (opcode.opcode <= AtomicLoad_UMIN.opcode)
+
+    def isAtomicLoad(opcode: UInt): Bool 
+        = (opcode >= AtomicLoad_ADD.U) && (opcode <= AtomicLoad_UMIN.U)
+
+
+    /*
+    * Decoder for CHI Opcodes of SN-F REQ 
+    * 
+    * @see {@code cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder}
+    */
+    class Decoder(paramOpcodeSupported          : Seq[CHIOpcode]    = Seq(),
+                  paramEnableUnsupportedCheck   : Boolean           = false)
+        (implicit p: Parameters)
+        extends CHIOpcodeDecoder(REQ, paramOpcodeSupported, Seq(
+        //  ========================
+            ReqLCrdReturn,
+        //  ------------------------
+            ReadNoSnp,
+            WriteNoSnpFull,
+            WriteNoSnpPtl,
+            WriteNoSnpZero,
+        //  ------------------------
+            ReadNoSnpSep,
+        //  ------------------------
+            CleanShared,
+            CleanSharedPersist,
+            CleanSharedPersistSep,
+            CleanInvalid,
+            MakeInvalid,
+        //  ------------------------
+            WriteNoSnpPtlCleanInv,
+            WriteNoSnpPtlCleanSh,
+            WriteNoSnpPtlCleanShPerSep,
+            WriteNoSnpFullCleanInv,
+            WriteNoSnpFullCleanSh,
+            WriteNoSnpFullCleanShPerSep,
+        //  ------------------------
+            PCrdReturn,
+        //  ------------------------
+            AtomicStore_ADD,
+            AtomicStore_CLR,
+            AtomicStore_EOR,
+            AtomicStore_SET,
+            AtomicStore_SMAX,
+            AtomicStore_SMIN,
+            AtomicStore_UMAX,
+            AtomicStore_UMIN,
+            AtomicLoad_ADD,
+            AtomicLoad_CLR,
+            AtomicLoad_EOR,
+            AtomicLoad_SET,
+            AtomicLoad_SMAX,
+            AtomicLoad_SMIN,
+            AtomicLoad_UMAX,
+            AtomicLoad_UMIN,
+            AtomicSwap,
+            AtomicCompare,
+        //  ------------------------
+            PrefetchTgt
+        //  ========================
+        ), paramEnableUnsupportedCheck)
 }

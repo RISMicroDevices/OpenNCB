@@ -1,9 +1,11 @@
 package cn.rismd.openncb.chi.opcode
 
 import chisel3._
+import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi._
 import cn.rismd.openncb.chi.EnumCHIIssue._
 import cn.rismd.openncb.chi.EnumCHIChannel._
+import cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder
 
 
 /* 
@@ -30,4 +32,35 @@ trait CHISNFOpcodesRSP extends WithCHIParameters {
     //  -----------------------------------------------------------------------------
     val CompPersist             = CHIOpcode(RSP, 0x0D, "CompPersist"            , E )
     //  =============================================================================
+
+
+    /*
+    * Decoder for CHI Opcodes of SN-F RSP 
+    * 
+    * @see {@code cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder}
+    */
+    class Decoder(paramOpcodeSupported          : Seq[CHIOpcode]    = Seq(),
+                  paramEnableUnsupportedCheck   : Boolean           = false)
+        (implicit p: Parameters)
+        extends CHIOpcodeDecoder(RSP, paramOpcodeSupported, Seq(
+        //  ========================
+            RespLCrdReturn,
+        //  ------------------------
+            RetryAck,
+            PCrdGrant,
+            Comp,
+            CompDBIDResp,
+        //  ------------------------
+            CompCMO,
+            ReadReceipt,
+        //  ------------------------
+            DBIDResp,
+        //  ------------------------
+            TagMatch,
+        //  ------------------------
+            Persist,
+        //  ------------------------
+            CompPersist
+        //  ========================
+        ), paramEnableUnsupportedCheck)
 }
