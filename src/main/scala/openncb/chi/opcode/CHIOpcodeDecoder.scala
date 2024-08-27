@@ -57,11 +57,13 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     /*
     * Module I/O:
     *
+    * @io input     valid       : CHI Opcode Input Valid.
     * @io input     opcode      : CHI Opcode Input.
     * @io output    decoded     : CHI Decoded Onehot Output.
     */
     val io = IO(new Bundle {
         // opcode input
+        val valid       = Input(Bool())
         val opcode      = Input(UInt(paramOpcodeWidth.W))
 
         // decoded output
@@ -80,17 +82,12 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         scalaSeqLogicDecoded(i)  := false.B
     })
 
-    scalaSeqLogicDecoded.foreach(u => {
-        dontTouch(u)
-    })
-
-
     // decoding supported CHI Opcodes
     paramOpcodeSupported.foreach(u => {
 
         if (u.applicable)
         {
-            scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode)
+            scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
             scalaSeqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}")
         }
@@ -105,7 +102,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         {
             if (u.applicable && !paramOpcodeSupported.contains(u))
             {
-                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode)
+                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
                 if (paramEnableUnsupportedCheck)
                     assert(!scalaSeqLogicDecoded(u.opcode),
@@ -121,7 +118,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         {
             if (u.applicable)
             {
-                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode)
+                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
                 scalaSeqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}")
             }
@@ -134,7 +131,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     (0 until scalaSeqLogicDecoded.length).foreach(i => {
         if (!paramOpcodeAll.map(u => u.applicable && u.is(i)).reduce(_ || _))
         {
-            scalaSeqLogicDecoded(i) := io.opcode === i.U
+            scalaSeqLogicDecoded(i) := io.opcode === i.U && io.valid
 
             assert(!scalaSeqLogicDecoded(i),
                 s"Unknown CHI Opcode: 0x${i.toHexString}")
@@ -168,4 +165,10 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     // utility functions
     def is(opcode: CHIOpcode): Bool =
         if (opcode.applicable) io.decoded(opcode.opcode) else false.B
+
+    def is(opcode0: CHIOpcode, opcodes: CHIOpcode*): Bool = {
+        (opcodes :+ opcode0).map(opcode => {
+            if (opcode.applicable) io.decoded(opcode.opcode) === opcode.opcode.U else false.B
+        }).reduce(_ || _)
+    }
 }

@@ -85,7 +85,7 @@ class CHIOpcode(val channel : EnumCHIChannel,
     * 
     * @param opcode Hardware instance of opcode source
     */
-    def is(opcode: UInt): Bool = opcode === asUInt
+    def is(opcode: UInt, valid: Bool = true.B): Bool = opcode === asUInt && valid
 }
 
 
