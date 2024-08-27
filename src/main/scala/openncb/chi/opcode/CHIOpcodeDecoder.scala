@@ -7,6 +7,7 @@ import cn.rismd.openncb.chi.EnumCHIChannel
 import cn.rismd.openncb.chi.opcode.CHIOpcode
 import cn.rismd.openncb.debug.DebugBundle
 import cn.rismd.openncb.debug.DebugSignal
+import freechips.rocketchip.util.SeqToAugmentedSeq
 
 /*
 * CHI Opcode Decoder
@@ -168,7 +169,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
 
     def is(opcode0: CHIOpcode, opcodes: CHIOpcode*): Bool = {
         (opcodes :+ opcode0).map(opcode => {
-            if (opcode.applicable) io.decoded(opcode.opcode) === opcode.opcode.U else false.B
-        }).reduce(_ || _)
+            if (opcode.applicable) io.decoded(opcode.opcode) else false.B
+        }).asUInt.orR
     }
 }
