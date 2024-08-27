@@ -19,23 +19,26 @@ import cn.rismd.openncb.debug.DebugSignal
 /*
 * NCB Transaction Data Payload.
 */
-class NCBTransactionPayload(implicit val p: Parameters) 
+object NCBTransactionPayload {
+
+    case class Parameters (
+    )
+
+    case object ParametersKey extends Field[Parameters]
+}
+
+class NCBTransactionPayload(implicit val p: Parameters)
         extends Module with WithAXI4Parameters 
                        with WithCHIParameters 
                        with WithNCBParameters {
 
     // public parameters
-    case class Parameters (
-    )
-
-    case object ParametersKey extends Field[Parameters]
-
-    val param   = p.lift(ParametersKey).getOrElse(() => new Parameters)
+    val param   = p.lift(NCBTransactionPayload.ParametersKey)
+        .getOrElse(() => new NCBTransactionPayload.Parameters)
 
 
     // local parameters
     protected def paramPayloadCapacity              = paramNCB.outstandingDepth
-    protected def paramPayloadAddressWidth          = log2Up(paramNCB.outstandingDepth)
 
     protected def paramUpstreamMaxBeatCount         = CHIConstants.CHI_MAX_PACKET_DATA_BITS_WIDTH / paramCHI.dataWidth
     protected def paramUpstreamIndexWidth           = log2Up(paramUpstreamMaxBeatCount)
@@ -72,7 +75,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * Port I/O: Upstream (CHI domain)
     * 
     * @io input     wen     : Write Enable.
-    * @io input     waddr   : Write Address, addressing the transaction entry in payload memory,
+    * @io input     wstrb   : Write Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
     * @io input     windex  : Write Index, addressing partial data of the transaction,
     *                         which comes from DataID.
@@ -80,7 +83,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     wmask   : Write Mask, comes from BE.
     * 
     * @io input     ren     : Read Enable.
-    * @io input     raddr   : Read Address, addressing the transaction entry in payload memory,
+    * @io input     rstrb   : Read Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
     * @io input     rindex  : Read index, addressing partial data of the transaction,
     *                         which comes from DataID.
@@ -89,14 +92,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
     class UpstreamPort extends Bundle {
         // write signals
         val wen             = Input(Bool())
-        val waddr           = Input(UInt(paramPayloadAddressWidth.W))
+        val wstrb           = Input(Vec(paramPayloadCapacity, Bool()))
         val windex          = Input(UInt(paramUpstreamIndexWidth.W))
         val wdata           = Input(UInt(paramUpstreamDataWidth.W))
         val wmask           = Input(UInt(paramUpstreamMaskWidth.W))
 
         // read signals
         val ren             = Input(Bool())
-        val raddr           = Input(UInt(paramPayloadAddressWidth.W))
+        val rstrb           = Input(Vec(paramPayloadCapacity, Bool()))
         val rindex          = Input(UInt(paramUpstreamIndexWidth.W))
         val rdata           = Output(UInt(paramUpstreamDataWidth.W))
 
@@ -108,7 +111,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * Port I/O: Downstream (AXI4 domain) 
     * 
     * @io input     wen     : Write Enable.
-    * @io input     waddr   : Write Address, addressing the transaction entry in payload memory,
+    * @io input     wstrb   : Write Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
     * @io input     windex  : Write Index, addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
@@ -116,7 +119,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     wlast   : Write Data Last, comes from RLAST.
     * 
     * @io input     ren     : Read Enable.
-    * @io input     raddr   : Read Address, addressing the transaction entry in payload memory,
+    * @io input     rstrb   : Read Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
     * @io input     rindex  : Read Index, addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
@@ -126,14 +129,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
     class DownstreamPort extends Bundle {
         // write signals
         val wen             = Input(Bool())
-        val waddr           = Input(UInt(paramPayloadAddressWidth.W))
+        val wstrb           = Input(Vec(paramPayloadCapacity, Bool()))
         val windex          = Input(UInt(paramDownstreamIndexWidth.W))
         val wdata           = Input(UInt(paramDownstreamDataWidth.W))
         val wlast           = Input(Bool())
 
         // read signals
         val ren             = Input(Bool())
-        val raddr           = Input(UInt(paramPayloadAddressWidth.W))
+        val rstrb           = Input(Vec(paramPayloadCapacity, Bool()))
         val rindex          = Input(UInt(paramDownstreamIndexWidth.W))
         val rdata           = Output(UInt(paramDownstreamDataWidth.W))
         val rmask           = Output(UInt(paramDownstreamMaskWidth.W))
@@ -146,14 +149,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * Port I/O: Payload Entry Allocation (w/ Debug)
     * 
     * @io input     en      : Allocation Enable.
-    * @io input     addr    : Allocation Address.
+    * @io input     strb    : Allocation Strobe, one-hot.
     * @io input     upload  : Allocation Direction, 'Upload' when asserted, otherwise 'Download'.
     *                         - Upload   : AXI to CHI
     *                         - Download : CHI to AXI
     */
     class AllocatePort extends Bundle {
         val en              = Input(Bool())
-        val addr            = Input(UInt(paramPayloadAddressWidth.W))
+        val strb            = Input(Vec(paramPayloadCapacity, Bool()))
         val upload          = Input(Bool())
     }
 
@@ -161,11 +164,11 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * Port I/O: Payload Entry Free (w/ Debug)
     * 
     * @io input     en      : Free Enable.
-    * @io input     addr    : Free Address.
+    * @io input     strb    : Free Strobe, one-hot.
     */
     class FreePort extends Bundle {
         val en              = Input(Bool())
-        val addr            = Input(UInt(paramPayloadAddressWidth.W))
+        val strb            = Input(Vec(paramPayloadCapacity, Bool()))
     }
 
 
@@ -201,66 +204,79 @@ class NCBTransactionPayload(implicit val p: Parameters)
     val regUpstreamValid    = RegInit(Vec(paramPayloadCapacity, Vec(paramUpstreamMaxBeatCount, Bool())), 
         init = VecInit.fill(paramPayloadCapacity, paramUpstreamMaxBeatCount)(false.B))
 
-    when (io.allocate.en) {
-        regUpstreamValid(io.allocate.addr)  := VecInit.fill(paramUpstreamMaxBeatCount)(false.B)
-    }
+    (0 until paramPayloadCapacity).foreach(i => {
 
-    when (io.upstream.wen) {
-        regUpstreamValid(io.upstream.waddr)(io.upstream.windex) := true.B
-    }
-    
+        when (io.allocate.en & io.allocate.strb(i)) {
+            regUpstreamValid(i) := VecInit.fill(paramUpstreamMaxBeatCount)(false.B)
+        }
+
+        when (io.upstream.wen & io.upstream.wstrb(i)) {
+            regUpstreamValid(i)(io.upstream.windex) := true.B
+        }
+    })
+
     // Status Payload - Downstream (AXI to CHI) Valid Registers
     val regDownstreamValid  = RegInit(Vec(paramPayloadCapacity, Bool()), 
         init = VecInit(Seq.fill(paramPayloadCapacity)(false.B)))
 
-    when (io.allocate.en) {
-        regDownstreamValid(io.allocate.addr)    := false.B
-    }
+    (0 until paramPayloadCapacity).foreach(i => {
 
-    when (io.downstream.wen && io.downstream.wlast) {
-        regDownstreamValid(io.downstream.waddr) := true.B
-    }
+        when (io.allocate.en & io.allocate.strb(i)) {
+            regDownstreamValid(i)   := false.B
+        }
+
+        when (io.downstream.wen & io.downstream.wlast & io.downstream.wstrb(i)) {
+            regDownstreamValid(i)   := true.B
+        }
+    })
 
 
     // Data Payload - Data Registers
     val regData = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotDataCount, UInt(paramPayloadSlotDataWidth.W))))
 
-    when (io.upstream.wen) {
+    (0 until paramPayloadCapacity).foreach(i => {
 
-        if (paramSlotCatCountUpstream == 1)
-            regData(io.upstream.waddr)(io.upstream.windex) := io.upstream.wdata
-        else
-            (0 until paramSlotCatCountUpstream).foreach(i => {
-                regData(io.upstream.waddr)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                    io.upstream.wdata.extract(i, paramPayloadSlotDataWidth)
-            })
-    }
+        when (io.upstream.wen & io.upstream.wstrb(i)) {
 
-    when (io.downstream.wen) {
+            if (paramSlotCatCountUpstream == 1)
+                regData(i)(io.upstream.windex)  := io.upstream.wdata
+            else
+                (0 until paramSlotCatCountUpstream).foreach(i => {
+                    regData(i)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                        io.upstream.wdata.extract(i, paramPayloadSlotDataWidth)
+                })
+        }
+
+        when (io.downstream.wen & io.downstream.wstrb(i)) {
     
         if (paramSlotCatCountDownstream == 1)
-            regData(io.downstream.waddr)(io.downstream.windex) := io.downstream.wdata
+            regData(i)(io.downstream.windex)    := io.downstream.wdata
         else
             (0 until paramSlotCatCountDownstream).foreach(i => {
-                regData(io.downstream.waddr)(Cat(io.downstream.windex, i.U(log2Up(paramSlotCatCountDownstream).W))) :=
+                regData(i)(Cat(io.downstream.windex, i.U(log2Up(paramSlotCatCountDownstream).W))) :=
                     io.downstream.wdata.extract(i, paramPayloadSlotDataWidth)
             })
-    }
+        }
+    })
+
+    
 
     // Data Payload - Mask Registers
     val regMask = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotMaskCount, UInt(paramPayloadSlotMaskWidth.W))))
 
-    when (io.upstream.wen) {
+    (0 until paramPayloadCapacity).foreach(i => {
 
-        if (paramSlotCatCountUpstream == 1)
-            regMask(io.upstream.waddr)(io.upstream.windex) := io.upstream.wmask
-        else
-            (0 until paramSlotCatCountUpstream).foreach(i => {
-                regMask(io.upstream.waddr)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                    io.upstream.wdata.extract(i, paramPayloadSlotMaskWidth)
-            })
-    }
+        when (io.upstream.wen & io.upstream.wstrb(i)) {
 
+            if (paramSlotCatCountUpstream == 1)
+                regMask(i)(io.upstream.windex)  := io.upstream.wmask
+            else
+                (0 until paramSlotCatCountUpstream).foreach(i => {
+                    regMask(i)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                        io.upstream.wdata.extract(i, paramPayloadSlotMaskWidth)
+                })
+        }
+    })
 
     // read concation and connections for payload data and mask registers
     val wireDataVecUpstream     = Wire(Vec(paramPayloadCapacity, 
@@ -298,13 +314,20 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
 
     // upstream outputs
-    io.upstream.rdata   := wireDataVecUpstream(io.upstream.raddr)(io.upstream.rindex)
+    io.upstream.rdata   := ParallelMux(
+        wireDataVecUpstream.zipWithIndex.map(t => (io.upstream.rstrb(t._2), t._1))
+    )(io.upstream.rindex)
 
     io.upstream.valid   := regDownstreamValid
 
     // downstream outputs
-    io.downstream.rdata := wireDataVecDownstream(io.downstream.raddr)(io.downstream.rindex)
-    io.downstream.rmask := wireMaskVecDownstream(io.downstream.raddr)(io.downstream.rindex)
+    io.downstream.rdata := ParallelMux(
+        wireDataVecDownstream.zipWithIndex.map(t => (io.downstream.rstrb(t._2), t._1))
+    )(io.downstream.rindex)
+
+    io.downstream.rmask := ParallelMux(
+        wireMaskVecDownstream.zipWithIndex.map(t => (io.downstream.rstrb(t._2), t._1))
+    )(io.downstream.rindex)
 
     io.downstream.valid := regUpstreamValid
 
@@ -317,14 +340,17 @@ class NCBTransactionPayload(implicit val p: Parameters)
         _.valid     -> false.BVecLit(paramPayloadCapacity)  // reset 'valid' to 0
     ))
 
-    when (io.allocate.en) {
-        regTransactionTable.valid   (io.allocate.addr)  := true.B
-        regTransactionTable.upload  (io.allocate.addr)  := io.allocate.upload
-    }
+    (0 until paramPayloadCapacity).foreach(i => {
 
-    when (io.free.en) {
-        regTransactionTable.valid   (io.free.addr)      := false.B
-    }
+        when (io.allocate.en & io.allocate.strb(i)) {
+            regTransactionTable.valid   (i) := true.B
+            regTransactionTable.upload  (i) := io.allocate.upload
+        }
+
+        when (io.free.en & io.free.strb(i)) {
+            regTransactionTable.valid   (i) := false.B
+        }
+    })
 
 
     // assertions & debugs
@@ -332,117 +358,141 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * Port I/O: Debug 
     */
     class DebugPort extends DebugBundle {
-        val DoubleAllocationException               = Output(Bool())
-        val DoubleFreeOrCorruptionException         = Output(Bool())
-        val DualWriteConfliction                    = Output(Bool())
-        val DualReadConfliction                     = Output(Bool())
-        val UpstreamWriteOutOfBound                 = Output(Bool())
-        val UpstreamReadOutOfBound                  = Output(Bool())
-        val DownstreamWriteOutOfBound               = Output(Bool())
-        val DownstreamReadOutOfBound                = Output(Bool())
-        val UpstreamWriteDirectionConfliction       = Output(Bool())
-        val UpstreamReadDirectionConfliction        = Output(Bool())
-        val DownstreamWriteDirectionConfliction     = Output(Bool())
-        val DownstreamReadDirectionConfliction      = Output(Bool())
+        val DoubleAllocationException               = Output(Vec(paramPayloadCapacity, Bool()))
+        val DoubleFreeOrCorruptionException         = Output(Vec(paramPayloadCapacity, Bool()))
+        val DualWriteConfliction                    = Output(Vec(paramPayloadCapacity, Bool()))
+        val DualReadConfliction                     = Output(Vec(paramPayloadCapacity, Bool()))
+        val UpstreamWriteOutOfBound                 = Output(Vec(paramPayloadCapacity, Bool()))
+        val UpstreamReadOutOfBound                  = Output(Vec(paramPayloadCapacity, Bool()))
+        val DownstreamWriteOutOfBound               = Output(Vec(paramPayloadCapacity, Bool()))
+        val DownstreamReadOutOfBound                = Output(Vec(paramPayloadCapacity, Bool()))
+        val UpstreamWriteDirectionConfliction       = Output(Vec(paramPayloadCapacity, Bool()))
+        val UpstreamReadDirectionConfliction        = Output(Vec(paramPayloadCapacity, Bool()))
+        val DownstreamWriteDirectionConfliction     = Output(Vec(paramPayloadCapacity, Bool()))
+        val DownstreamReadDirectionConfliction      = Output(Vec(paramPayloadCapacity, Bool()))
     }
 
     /*
     * @assertion DoubleAllocationException
     *   One slot in Transaction Payload must only be allocated once util next free.
     */
-    io.debug.DoubleAllocationException := io.allocate.en && regTransactionTable.valid(io.allocate.addr)
-    assert(!io.debug.DoubleAllocationException,
-        "double allocation")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DoubleAllocationException(i) := io.allocate.en && io.allocate.strb(i) && regTransactionTable.valid(i)
+        assert(!io.debug.DoubleAllocationException(i),
+            s"double allocation at [${i}]")
+    })
 
     /*
     * @assertion DoubleFreeOrCorruptionException
     *   One slot in Transaction Payload must only be freed once, and a previous
     *   allocation must have been performed.
     */
-    io.debug.DoubleFreeOrCorruptionException := io.free.en && !regTransactionTable.valid(io.free.addr)
-    assert(!io.debug.DoubleFreeOrCorruptionException,
-        "double free or corruption")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DoubleFreeOrCorruptionException(i) := io.free.en && io.free.strb(i) && !regTransactionTable.valid(i)
+        assert(!io.debug.DoubleFreeOrCorruptionException(i),
+            s"double free or corruption at [${i}]")
+    })
 
     /*
     * @assertion TransactionDualWriteConfliction 
     *   In one transaction, it's not allowed to write payload simultaneously from both
     *   downstream and upstream.
     */
-    io.debug.DualWriteConfliction := io.upstream.wen && io.downstream.wen.orR && io.upstream.waddr === io.downstream.waddr
-    assert(!io.debug.DualWriteConfliction,
-        "payload write confliction by downstream and upstream")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DualWriteConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && io.downstream.wen && io.downstream.wstrb(i)
+        assert(!io.debug.DualWriteConfliction(i),
+            s"payload write confliction by downstream and upstream at [${i}]")
+    })
 
     /*
     * @assertion TransactionDualReadConfliction 
     *   In one transaction, it's not allowed to read payload simultaneously from both
     *   downstream and upstream.
     */
-    io.debug.DualReadConfliction := io.upstream.ren && io.upstream.ren && io.upstream.raddr === io.upstream.raddr
-    assert(!io.debug.DualReadConfliction,
-        "payload read confliction by downstream and upstream")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DualReadConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && io.downstream.ren && io.downstream.rstrb(i)
+        assert(!io.debug.DualReadConfliction(i),
+            s"payload read confliction by downstream and upstream at [${i}]")
+    })
 
     /* 
     * @assertion UpstreamWriteOutOfBound
     *   Payload writes were not allowed on non-allocated payload slots.
     */
-    io.debug.UpstreamWriteOutOfBound := io.upstream.wen && !regTransactionTable.valid(io.upstream.waddr)
-    assert(!io.debug.UpstreamWriteOutOfBound,
-        "payload upstream write on non-exist transaction")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.UpstreamWriteOutOfBound(i) := io.upstream.wen && io.upstream.wstrb(i) && !regTransactionTable.valid(i)
+        assert(!io.debug.UpstreamWriteOutOfBound(i),
+            s"payload upstream write on non-exist transaction at [${i}]")
+    })
 
     /*
     * @assertion UpstreamReadOutOfBound
     *   Payload reads were not allowed on non-allocated payload slots. 
     */
-    io.debug.UpstreamReadOutOfBound := io.upstream.ren && !regTransactionTable.valid(io.upstream.raddr)
-    assert(!io.debug.UpstreamReadOutOfBound,
-        "payload upstream read on non-exist transaction")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.UpstreamReadOutOfBound(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.valid(i)
+        assert(!io.debug.UpstreamReadOutOfBound(i),
+            s"payload upstream read on non-exist transaction at [${i}]")
+    })
 
     /*
     * @assertion DownstreamWriteOutOfBound
     *   Payload writes were not allowed on non-allocated payload slots.
     */
-    io.debug.DownstreamWriteOutOfBound := io.downstream.wen.orR && !regTransactionTable.valid(io.downstream.waddr)
-    assert(!io.debug.DownstreamWriteOutOfBound,
-        "payload downstream write on non-exist transaction")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DownstreamWriteOutOfBound(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.valid(i)
+        assert(!io.debug.DownstreamWriteOutOfBound(i),
+            s"payload downstream write on non-exist transaction at [${i}]")
+    })
 
     /*
     * @assertion DownstreamReadOutOfBound
     *   Payload reads were not allowed on non-allocated payload slots. 
     */
-    io.debug.DownstreamReadOutOfBound := io.downstream.ren && !regTransactionTable.valid(io.downstream.raddr)
-    assert(!io.debug.DownstreamReadOutOfBound,
-        "payload downstream read on non-exist transaction")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DownstreamReadOutOfBound(i) := io.downstream.ren && io.downstream.rstrb(i) && !regTransactionTable.valid(i)
+        assert(!io.debug.DownstreamReadOutOfBound(i),
+            s"payload downstream read on non-exist transaction at [${i}]")
+    })
 
     /*
     * @assertion UpstreamWriteDirectionConfliction
     *   Payload write direction must be the same as transaction direction.
     *   e.g. CHI Write Transaction => (CHI Upstream) Write-only <-PAYLOAD-> Read-only (Downstream AXI)
     */
-    io.debug.UpstreamWriteDirectionConfliction := io.upstream.wen && regTransactionTable.upload(io.upstream.waddr)
-    assert(!io.debug.UpstreamWriteDirectionConfliction,
-        "payload upstream write direction conflict")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.UpstreamWriteDirectionConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && regTransactionTable.upload(i)
+        assert(!io.debug.UpstreamWriteDirectionConfliction(i),
+            s"payload upstream write direction conflict at [${i}]")
+    })
 
     /*
     * @assertion UpstreamReadDirectionConfliction
     *   Payload read direction must be the same as transaction direction. 
     */
-    io.debug.UpstreamReadDirectionConfliction := io.upstream.ren && !regTransactionTable.upload(io.upstream.raddr)
-    assert(!io.debug.UpstreamReadDirectionConfliction,
-        "payload upstream read direction conflict")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.UpstreamReadDirectionConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.upload(i)
+        assert(!io.debug.UpstreamReadDirectionConfliction(i),
+            s"payload upstream read direction conflict at [${i}]")
+    })
 
     /*
     * @assertion DownstreamWriteDirectionConfliction
     *   Payload write direction must be the same as transaction direction.
     */
-    io.debug.DownstreamWriteDirectionConfliction := io.downstream.wen.orR && !regTransactionTable.upload(io.downstream.waddr)
-    assert(!io.debug.DownstreamWriteDirectionConfliction,
-        "payload downstream write direction conflict")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DownstreamWriteDirectionConfliction(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.upload(i)
+        assert(!io.debug.DownstreamWriteDirectionConfliction(i),
+            s"payload downstream write direction conflict at [${i}]")
+    })
 
     /* 
     * @assertion DownstreamReadDirectionConfliction 
     *   Payload read direction must be the same as transaction direction. 
     */
-    io.debug.DownstreamReadDirectionConfliction := io.downstream.ren && regTransactionTable.upload(io.downstream.raddr)
-    assert(!io.debug.DownstreamReadDirectionConfliction,
-        "payload downstream read direction conflict")
+    (0 until paramPayloadCapacity).foreach(i => {
+        io.debug.DownstreamReadDirectionConfliction(i) := io.downstream.ren && io.downstream.rstrb(i) && regTransactionTable.upload(i)
+        assert(!io.debug.DownstreamReadDirectionConfliction(i),
+            s"payload downstream read direction conflict at [${i}]")
+    })
 }
