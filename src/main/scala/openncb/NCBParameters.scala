@@ -1,6 +1,7 @@
 package cn.rismd.openncb
 
 import org.chipsalliance.cde.config.Field
+import chisel3.util.log2Up
 
 
 case class NCBParameters (
@@ -83,6 +84,9 @@ case class NCBParameters (
     require(outstandingDepth >= 1 && outstandingDepth <= 15, 
         s"The legal value for 'outstandingDepth' was 1 to 15, by the AMBA CHI specification: " +
         s"outstandingDepth = ${outstandingDepth}")
+
+    //
+    def outstandingIndexWidth: Int  = log2Up(outstandingDepth)
 }
 
 
