@@ -34,9 +34,9 @@ class CHIBundleREQ(implicit p: Parameters) extends AbstractCHIBundle {
         max paramCHI.reqEndianWidth
         max paramCHI.reqDeepWidth)
 
-    val StashNIDValid   = CHIFieldUInt(paramCHI.reqStashNIDValidWidth   - 1, 0, 0, StashNIDValid_Endian_Deep)
-    val Endian          = CHIFieldUInt(paramCHI.reqEndianWidth          - 1, 0, 0, StashNIDValid_Endian_Deep)
-    val Deep            = CHIFieldUInt(paramCHI.reqDeepWidth            - 1, 0, 0, StashNIDValid_Endian_Deep, EnumCHIIssue.E)
+    def StashNIDValid   = CHIFieldUInt(paramCHI.reqStashNIDValidWidth   - 1, 0, 0, StashNIDValid_Endian_Deep)
+    def Endian          = CHIFieldUInt(paramCHI.reqEndianWidth          - 1, 0, 0, StashNIDValid_Endian_Deep)
+    def Deep            = CHIFieldUInt(paramCHI.reqDeepWidth            - 1, 0, 0, StashNIDValid_Endian_Deep, EnumCHIIssue.E)
     //  ----------------------------------------------------------------
     val ReturnTxnID_StashLPIDValid_StashLPID    = CHIFieldUInt(
             paramCHI.reqReturnTxnIDWidth
