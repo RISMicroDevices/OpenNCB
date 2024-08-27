@@ -21,6 +21,10 @@ class CHIChannel[+T <: AbstractCHIBundle](gen: T)(implicit p: Parameters) extend
 
     // xLCRDV       : L-Credit Valid.
     val lcrdv       = Input(Bool())
+
+
+    // utility functions
+    def undirectedChiselType    = Output(chiselTypeOf(this))
 }
 
 
