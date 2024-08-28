@@ -1,6 +1,8 @@
 package cn.rismd.openncb.chi.field
 
 import chisel3._
+import cn.rismd.openncb.chi.bundle.CHIBundleREQ
+import cn.rismd.openncb.chi.channel.CHIChannel
 
 
 /* 
@@ -10,7 +12,18 @@ sealed class EnumCHIFieldSize(ordinal               : Int,
                               name                  : String,
                               val value             : Int,
                               val displayName       : String)
-        extends Enum[EnumCHIFieldSize](name, ordinal)
+        extends Enum[EnumCHIFieldSize](name, ordinal) {
+
+    /*
+    * Hardware decoder.
+    */
+    def is(size: UInt)          : Bool  = size === value.U
+
+    def is(req: CHIBundleREQ)   : Bool  = req.Size.get === value.U
+
+    def is[T <: CHIBundleREQ](req: CHIChannel[T]): Bool = is(req.flit)
+    /**/
+}
 
 object CHIFieldSize {
 

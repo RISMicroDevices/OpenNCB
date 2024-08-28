@@ -5,6 +5,8 @@ import cn.rismd.openncb.chi.field.CHIFieldOrder.{NoOrdering => NoOrdering}
 import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestAccepted => RequestAccepted}
 import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestOrder => RequestOrder}
 import cn.rismd.openncb.chi.field.CHIFieldOrder.{EndpointOrder => EndpointOrder}
+import cn.rismd.openncb.chi.bundle.CHIBundleREQ
+import cn.rismd.openncb.chi.channel.CHIChannel
 
 
 /*
@@ -14,7 +16,18 @@ sealed class EnumCHIFieldOrder(ordinal              : Int,
                                name                 : String,
                                val value            : Int,
                                val displayName      : String)
-        extends Enum[EnumCHIFieldOrder](name, ordinal)
+        extends Enum[EnumCHIFieldOrder](name, ordinal) {
+
+    /*
+    * Hardware decoder. 
+    */
+    def is(size: UInt)          : Bool  = size === value.U
+
+    def is(req: CHIBundleREQ)   : Bool  = is(req.Order.get)
+
+    def is[T <: CHIBundleREQ](req: CHIChannel[T]): Bool = is(req.flit)
+    /**/
+}
 
 object CHIFieldOrder {
 

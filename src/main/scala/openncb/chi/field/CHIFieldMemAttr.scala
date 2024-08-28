@@ -1,6 +1,8 @@
 package cn.rismd.openncb.chi.field
 
 import chisel3._
+import cn.rismd.openncb.chi.bundle.CHIBundleREQ
+import cn.rismd.openncb.chi.channel.CHIChannel
 
 
 /* 
@@ -15,7 +17,12 @@ sealed class EnumCHIFieldMemAttr(ordinal            : Int,
     /*
     * Hardware wire extraction. 
     */
-    def is(u: UInt): Bool = u(bitIndex)
+    def is(u: UInt)             : Bool  = u(bitIndex)
+
+    def is(req: CHIBundleREQ)   : Bool  = is(req.MemAttr.get)
+
+    def is[T <: CHIBundleREQ](req: CHIChannel[T]): Bool = is(req.flit)
+    /**/
 }
 
 object CHIFieldMemAttr {
