@@ -6,6 +6,12 @@ import chisel3._
 /* 
 * Size field helper.
 */
+sealed class EnumCHIFieldSize(ordinal               : Int,
+                              name                  : String,
+                              val value             : Int,
+                              val displayName       : String)
+        extends Enum[EnumCHIFieldSize](name, ordinal)
+
 object CHIFieldSize {
 
     /*
@@ -18,6 +24,14 @@ object CHIFieldSize {
     val SIZE_16B    : Int       = 0x04  // 0b100
     val SIZE_32B    : Int       = 0x05  // 0b101
     val SIZE_64B    : Int       = 0x06  // 0b110
+
+    val Size1B      : EnumCHIFieldSize  = new EnumCHIFieldSize(0, "Size1B" , SIZE_1B , "1B" )
+    val Size2B      : EnumCHIFieldSize  = new EnumCHIFieldSize(1, "Size2B" , SIZE_2B , "2B" )
+    val Size4B      : EnumCHIFieldSize  = new EnumCHIFieldSize(2, "Size4B" , SIZE_4B , "4B" )
+    val Size8B      : EnumCHIFieldSize  = new EnumCHIFieldSize(3, "Size8B" , SIZE_8B , "8B" )
+    val Size16B     : EnumCHIFieldSize  = new EnumCHIFieldSize(4, "Size16B", SIZE_16B, "16B")
+    val Size32B     : EnumCHIFieldSize  = new EnumCHIFieldSize(5, "Size32B", SIZE_32B, "32B")
+    val Size64B     : EnumCHIFieldSize  = new EnumCHIFieldSize(6, "Size64B", SIZE_64B, "64B")
     /**/
 
     /* 

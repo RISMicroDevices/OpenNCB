@@ -6,6 +6,18 @@ import chisel3._
 /* 
 * MemAttr field helper. 
 */
+sealed class EnumCHIFieldMemAttr(ordinal            : Int,
+                                 name               : String,
+                                 val bitIndex       : Int,
+                                 val displayName    : String) 
+        extends Enum[EnumCHIFieldMemAttr](name, ordinal) {
+
+    /*
+    * Hardware wire extraction. 
+    */
+    def is(u: UInt): Bool = u(bitIndex)
+}
+
 object CHIFieldMemAttr {
 
     // Allocate hint bit offset.
@@ -19,6 +31,15 @@ object CHIFieldMemAttr {
 
     // Early Write Acknowledge (EWA) bit offset
     val BIT_EWA             : Int   = 0
+
+    /*
+    * Enumeration types of MemAttr bits.
+    */
+    val Allocate            : EnumCHIFieldMemAttr   = new EnumCHIFieldMemAttr(0, "Allocate" , BIT_ALLOCATE  , "Allocate" )
+    val Cacheable           : EnumCHIFieldMemAttr   = new EnumCHIFieldMemAttr(1, "Cacheable", BIT_CACHEABLE , "Cacheable")
+    val Device              : EnumCHIFieldMemAttr   = new EnumCHIFieldMemAttr(2, "Device"   , BIT_DEVICE    , "Device"   )
+    val EWA                 : EnumCHIFieldMemAttr   = new EnumCHIFieldMemAttr(3, "EWA"      , BIT_EWA       , "EWA"      )
+    /**/
 
     /*
     * Check if this MemAttr field bits had Allocate Hint bit set.
