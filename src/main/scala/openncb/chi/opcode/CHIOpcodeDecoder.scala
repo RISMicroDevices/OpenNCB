@@ -77,10 +77,10 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
 
 
     // default value and logic wires for opcode decoding
-    protected val scalaSeqLogicDecoded   = Seq.fill(io.decoded.length)(Wire(Bool()))
+    protected val seqLogicDecoded   = Seq.fill(io.decoded.length)(Wire(Bool()))
 
     (0 until paramDecodedWidth).foreach(i => {
-        scalaSeqLogicDecoded(i)  := false.B
+        seqLogicDecoded(i)  := false.B
     })
 
     // decoding supported CHI Opcodes
@@ -88,14 +88,15 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
 
         if (u.applicable)
         {
-            scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
+            seqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
-            scalaSeqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}")
+            dontTouch(
+                seqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}"))
         }
     })
 
     // decoding (unsupported / all) CHI Opcodes
-    protected var scalaSeqLogicUnsupported  = Seq[Bool]()
+    protected var seqLogicUnsupported  = Seq[Bool]()
 
     paramOpcodeAll.foreach(u => {
 
@@ -103,64 +104,69 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         {
             if (u.applicable && !paramOpcodeSupported.contains(u))
             {
-                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
+                seqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
                 if (paramEnableUnsupportedCheck)
-                    assert(!scalaSeqLogicDecoded(u.opcode),
+                    assert(!seqLogicDecoded(u.opcode),
                         s"Unsupported CHI Opcode: ${u.name} (0x${u.opcode.toHexString})")
 
-                scalaSeqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}_UNSUPPORTED")
+                dontTouch(
+                    seqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}_UNSUPPORTED"))
 
-                scalaSeqLogicUnsupported
-                    = scalaSeqLogicUnsupported :+ scalaSeqLogicDecoded(u.opcode)
+                seqLogicUnsupported
+                    = seqLogicUnsupported :+ seqLogicDecoded(u.opcode)
             }
         }
         else
         {
             if (u.applicable)
             {
-                scalaSeqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
+                seqLogicDecoded(u.opcode)   := u.is(io.opcode, io.valid)
 
-                scalaSeqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}")
+                dontTouch(
+                    seqLogicDecoded(u.opcode).suggestName(s"decoded_${u.name}"))
             }
         }
     })
 
     // decoding unknown CHI Opcodes
-    protected var scalaSeqLogicUnknown  = Seq[Bool]()
+    protected var seqLogicUnknown   = Seq[Bool]()
 
-    (0 until scalaSeqLogicDecoded.length).foreach(i => {
+    (0 until seqLogicDecoded.length).foreach(i => {
         if (!paramOpcodeAll.map(u => u.applicable && u.is(i)).reduce(_ || _))
         {
-            scalaSeqLogicDecoded(i) := io.opcode === i.U && io.valid
+            seqLogicDecoded(i)  := 
+                // with X-state propagation compatibility
+                Mux(io.valid, io.opcode === i.U, dontTouch(WireInit(false.B)))
 
-            assert(!scalaSeqLogicDecoded(i),
+            assert(!seqLogicDecoded(i),
                 s"Unknown CHI Opcode: 0x${i.toHexString}")
 
-            scalaSeqLogicDecoded(i).suggestName(s"decoded_${i.toHexString}_UNKNOWN")
+            dontTouch(
+                seqLogicDecoded(i).suggestName(s"decoded_${i.toHexString}_UNKNOWN"))
 
-            scalaSeqLogicUnknown
-                = scalaSeqLogicUnknown :+ scalaSeqLogicDecoded(i)
+            seqLogicUnknown
+                = seqLogicUnknown :+ seqLogicDecoded(i)
         }
     })
 
     
     // decoded output
-    scalaSeqLogicDecoded.zipWithIndex.foreach(u => {
+    seqLogicDecoded.zipWithIndex.foreach(u => {
         io.decoded(u._2)    := u._1
     })
 
     
     // debug output
-    if (scalaSeqLogicUnsupported.isEmpty)
+    if (seqLogicUnsupported.isEmpty)
         io.debug.OpcodeUnsupported  := false.B
     else
-        io.debug.OpcodeUnsupported  := scalaSeqLogicUnsupported.reduce(_ || _)
+        io.debug.OpcodeUnsupported  := seqLogicUnsupported.reduce(_ || _)
 
-    if (scalaSeqLogicUnknown.isEmpty)
+    if (seqLogicUnknown.isEmpty)
         io.debug.OpcodeUnknown      := false.B
     else
-        io.debug.OpcodeUnknown      := scalaSeqLogicUnknown.reduce(_ || _)
+        io.debug.OpcodeUnknown      := seqLogicUnknown.reduce(_ || _)
 
 
     // utility functions
