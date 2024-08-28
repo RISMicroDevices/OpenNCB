@@ -29,16 +29,16 @@ object CHIFieldUInt {
         val paramCHI = p(CHIParametersKey)
 
         if (width <= 0)
-            None
+            return None
 
         if (issues.isEmpty)
-            Some(UInt(width.W))
+            return Some(UInt(width.W))
 
         for (issue <- issues)
             if (issue == paramCHI.issue)
-                Some(UInt(width.W))
+                return Some(UInt(width.W))
 
-        None
+        return None
     }
     
     def apply(msb: Int, lsb: Int, off: Int, field: Option[UInt], issues: EnumCHIIssue*)
@@ -47,19 +47,19 @@ object CHIFieldUInt {
         val paramCHI = p(CHIParametersKey)
 
         if (field.isEmpty)
-            None
+            return None
 
         if ((msb + off) < 0 || (lsb + off) < 0 || msb < lsb)
-            None
+            return None
 
         if (issues.isEmpty)
-            Some(field.get(msb + off, lsb + off))
+            return Some(field.get(msb + off, lsb + off))
 
         for (issue <- issues)
             if (issue == paramCHI.issue)
-                Some(field.get(msb + off, lsb + off))
+                return Some(field.get(msb + off, lsb + off))
 
-        None
+        return None
     }
 }
 /**/
