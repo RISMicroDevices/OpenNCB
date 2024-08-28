@@ -83,9 +83,12 @@ class CHIOpcode(val channel : EnumCHIChannel,
     /* 
     * Hardware comparsion of opcode. 
     * 
-    * @param opcode Hardware instance of opcode source
+    * @param opcode Hardware instance of opcode source, with X-state propagation compatiblity
+    * @param valid  Hardware instance of valid signal
     */
-    def is(opcode: UInt, valid: Bool = true.B): Bool = opcode === asUInt && valid
+    def is(opcode: UInt, valid: Bool = true.B): Bool 
+        // with X-state propagation compatibility
+        = Mux(valid, opcode === asUInt, dontTouch(WireInit(false.B)))
 }
 
 
