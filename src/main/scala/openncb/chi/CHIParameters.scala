@@ -86,7 +86,7 @@ case class CHIParameters (
 */
 {
     //
-    private def unknownIssue() = 
+    private def unknownIssue = 
         throw new IllegalArgumentException(s"unknown or unsupported CHI Issue: ${issue}")
     //
 

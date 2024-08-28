@@ -30,7 +30,7 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         extends Module with WithCHIParameters {
 
     //
-    private def unknownChannel() = 
+    private def unknownChannel = 
         throw new IllegalArgumentException(s"unknown or unsupported CHI Channel: ${paramChannel}")
     //
 
