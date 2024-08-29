@@ -193,10 +193,6 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
         // transaction free
         val free        = new FreePort
-
-        // debug port
-        @DebugSignal
-        val debug       = new DebugPort
     })
 
 
@@ -371,14 +367,17 @@ class NCBTransactionPayload(implicit val p: Parameters)
         val DownstreamWriteDirectionConfliction     = Output(Vec(paramPayloadCapacity, Bool()))
         val DownstreamReadDirectionConfliction      = Output(Vec(paramPayloadCapacity, Bool()))
     }
+    
+    @DebugSignal
+    val debug   = IO(new DebugPort)
 
     /*
     * @assertion DoubleAllocationException
     *   One slot in Transaction Payload must only be allocated once util next free.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DoubleAllocationException(i) := io.allocate.en && io.allocate.strb(i) && regTransactionTable.valid(i)
-        assert(!io.debug.DoubleAllocationException(i),
+        debug.DoubleAllocationException(i) := io.allocate.en && io.allocate.strb(i) && regTransactionTable.valid(i)
+        assert(!debug.DoubleAllocationException(i),
             s"double allocation at [${i}]")
     })
 
@@ -388,8 +387,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   allocation must have been performed.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DoubleFreeOrCorruptionException(i) := io.free.en && io.free.strb(i) && !regTransactionTable.valid(i)
-        assert(!io.debug.DoubleFreeOrCorruptionException(i),
+        debug.DoubleFreeOrCorruptionException(i) := io.free.en && io.free.strb(i) && !regTransactionTable.valid(i)
+        assert(!debug.DoubleFreeOrCorruptionException(i),
             s"double free or corruption at [${i}]")
     })
 
@@ -399,8 +398,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   downstream and upstream.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DualWriteConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && io.downstream.wen && io.downstream.wstrb(i)
-        assert(!io.debug.DualWriteConfliction(i),
+        debug.DualWriteConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && io.downstream.wen && io.downstream.wstrb(i)
+        assert(!debug.DualWriteConfliction(i),
             s"payload write confliction by downstream and upstream at [${i}]")
     })
 
@@ -410,8 +409,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   downstream and upstream.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DualReadConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && io.downstream.ren && io.downstream.rstrb(i)
-        assert(!io.debug.DualReadConfliction(i),
+        debug.DualReadConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && io.downstream.ren && io.downstream.rstrb(i)
+        assert(!debug.DualReadConfliction(i),
             s"payload read confliction by downstream and upstream at [${i}]")
     })
 
@@ -420,8 +419,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload writes were not allowed on non-allocated payload slots.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.UpstreamWriteOutOfBound(i) := io.upstream.wen && io.upstream.wstrb(i) && !regTransactionTable.valid(i)
-        assert(!io.debug.UpstreamWriteOutOfBound(i),
+        debug.UpstreamWriteOutOfBound(i) := io.upstream.wen && io.upstream.wstrb(i) && !regTransactionTable.valid(i)
+        assert(!debug.UpstreamWriteOutOfBound(i),
             s"payload upstream write on non-exist transaction at [${i}]")
     })
 
@@ -430,8 +429,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload reads were not allowed on non-allocated payload slots. 
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.UpstreamReadOutOfBound(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.valid(i)
-        assert(!io.debug.UpstreamReadOutOfBound(i),
+        debug.UpstreamReadOutOfBound(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.valid(i)
+        assert(!debug.UpstreamReadOutOfBound(i),
             s"payload upstream read on non-exist transaction at [${i}]")
     })
 
@@ -440,8 +439,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload writes were not allowed on non-allocated payload slots.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DownstreamWriteOutOfBound(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.valid(i)
-        assert(!io.debug.DownstreamWriteOutOfBound(i),
+        debug.DownstreamWriteOutOfBound(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.valid(i)
+        assert(!debug.DownstreamWriteOutOfBound(i),
             s"payload downstream write on non-exist transaction at [${i}]")
     })
 
@@ -450,8 +449,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload reads were not allowed on non-allocated payload slots. 
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DownstreamReadOutOfBound(i) := io.downstream.ren && io.downstream.rstrb(i) && !regTransactionTable.valid(i)
-        assert(!io.debug.DownstreamReadOutOfBound(i),
+        debug.DownstreamReadOutOfBound(i) := io.downstream.ren && io.downstream.rstrb(i) && !regTransactionTable.valid(i)
+        assert(!debug.DownstreamReadOutOfBound(i),
             s"payload downstream read on non-exist transaction at [${i}]")
     })
 
@@ -461,8 +460,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   e.g. CHI Write Transaction => (CHI Upstream) Write-only <-PAYLOAD-> Read-only (Downstream AXI)
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.UpstreamWriteDirectionConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && regTransactionTable.upload(i)
-        assert(!io.debug.UpstreamWriteDirectionConfliction(i),
+        debug.UpstreamWriteDirectionConfliction(i) := io.upstream.wen && io.upstream.wstrb(i) && regTransactionTable.upload(i)
+        assert(!debug.UpstreamWriteDirectionConfliction(i),
             s"payload upstream write direction conflict at [${i}]")
     })
 
@@ -471,8 +470,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload read direction must be the same as transaction direction. 
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.UpstreamReadDirectionConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.upload(i)
-        assert(!io.debug.UpstreamReadDirectionConfliction(i),
+        debug.UpstreamReadDirectionConfliction(i) := io.upstream.ren && io.upstream.rstrb(i) && !regTransactionTable.upload(i)
+        assert(!debug.UpstreamReadDirectionConfliction(i),
             s"payload upstream read direction conflict at [${i}]")
     })
 
@@ -481,8 +480,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload write direction must be the same as transaction direction.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DownstreamWriteDirectionConfliction(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.upload(i)
-        assert(!io.debug.DownstreamWriteDirectionConfliction(i),
+        debug.DownstreamWriteDirectionConfliction(i) := io.downstream.wen && io.downstream.wstrb(i) && !regTransactionTable.upload(i)
+        assert(!debug.DownstreamWriteDirectionConfliction(i),
             s"payload downstream write direction conflict at [${i}]")
     })
 
@@ -491,8 +490,8 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   Payload read direction must be the same as transaction direction. 
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        io.debug.DownstreamReadDirectionConfliction(i) := io.downstream.ren && io.downstream.rstrb(i) && regTransactionTable.upload(i)
-        assert(!io.debug.DownstreamReadDirectionConfliction(i),
+        debug.DownstreamReadDirectionConfliction(i) := io.downstream.ren && io.downstream.rstrb(i) && regTransactionTable.upload(i)
+        assert(!debug.DownstreamReadDirectionConfliction(i),
             s"payload downstream read direction conflict at [${i}]")
     })
 }

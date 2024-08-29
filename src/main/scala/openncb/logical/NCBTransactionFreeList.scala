@@ -62,10 +62,6 @@ class NCBTransactionFreeList(implicit val p: Parameters)
 
         // free port
         val free        = new FreePort
-
-        // debug port
-        @DebugSignal
-        val debug       = new DebugPort
     })
 
 
@@ -108,12 +104,15 @@ class NCBTransactionFreeList(implicit val p: Parameters)
         val DoubleFreeOrCorruption      = Output(Vec(paramNCB.outstandingDepth, Bool()))
     }
 
+    @DebugSignal
+    val debug = IO(new DebugPort)
+
     /*
     * @assertion FreeListUnderflow 
     *   Allocation was not allowed on empty free list.
     */
-    io.debug.FreeListUnderflow := io.allocate.en && !io.allocate.strb.asUInt.orR
-    assert(!io.debug.FreeListUnderflow,
+    debug.FreeListUnderflow := io.allocate.en && !io.allocate.strb.asUInt.orR
+    assert(!debug.FreeListUnderflow,
         "free list allocation underflow")
 
     /*
@@ -121,8 +120,8 @@ class NCBTransactionFreeList(implicit val p: Parameters)
     *   Free operation was not allowed on free slots.
     */
     (0 until paramNCB.outstandingDepth).foreach(i => {
-        io.debug.DoubleFreeOrCorruption(i) := io.free.en && io.free.strb(i) && regFree(i)
-        assert(!io.debug.DoubleFreeOrCorruption(i),
+        debug.DoubleFreeOrCorruption(i) := io.free.en && io.free.strb(i) && regFree(i)
+        assert(!debug.DoubleFreeOrCorruption(i),
             s"free list double free or corruption at ${i}")
     })
 }
