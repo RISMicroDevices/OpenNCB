@@ -92,10 +92,6 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
 
         // CHI link-layer signals
         val lcrdv                   = Output(Bool())
-
-        // debug port
-        @DebugSignal
-        val debug                   = new DebugPort
     })
 
 
@@ -156,30 +152,33 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
         val LinkCreditUnderflow                 = Output(Bool())
     }
 
+    @DebugSignal
+    val debug   = IO(new DebugPort)
+
     /*
     * @assertion LinkActiveStateNotOneHot
     *   The states from Link Active must be one-hot. 
     */
     private val debugLogicLinkactivePopcnt  = Wire(UInt(3.W))
     debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
-    io.debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
-    assert(!io.debug.LinkActiveStateNotOneHot,
+    debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
+    assert(!debug.LinkActiveStateNotOneHot,
         "linkactive state must be one-hot")
 
     /* 
     * @assertion LinkCreditConsumeOutOfRun
     *   The consuming of a Link Credit must only occur in RUN state. 
     */
-    io.debug.LinkCreditConsumeOutOfRun := paramEnableMonitor.B && (!io.linkState.run && io.monitorCreditConsume)
-    assert(!io.debug.LinkCreditConsumeOutOfRun,
+    debug.LinkCreditConsumeOutOfRun := paramEnableMonitor.B && (!io.linkState.run && io.monitorCreditConsume)
+    assert(!debug.LinkCreditConsumeOutOfRun,
         "link credit consume out of RUN state")
 
     /* 
     * @assertion LinkCreditReturnOutOfDeactivate
     *   The returning of a Link Credit must only occur in DEACTIVATE state.
     */
-    io.debug.LinkCreditReturnOutOfDeactivate := paramEnableMonitor.B && (!io.linkState.deactivate && io.monitorCreditReturn)
-    assert(!io.debug.LinkCreditReturnOutOfDeactivate,
+    debug.LinkCreditReturnOutOfDeactivate := paramEnableMonitor.B && (!io.linkState.deactivate && io.monitorCreditReturn)
+    assert(!debug.LinkCreditReturnOutOfDeactivate,
         "link credit return out of DEACTIVATE state")
     
     /*
@@ -187,8 +186,8 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    io.debug.LinkCreditOverflow := paramEnableMonitor.B && (debugRegMonitorCreditCounter === paramMaxCount.U && io.lcrdv)
-    assert(!io.debug.LinkCreditOverflow,
+    debug.LinkCreditOverflow := paramEnableMonitor.B && (debugRegMonitorCreditCounter === paramMaxCount.U && io.lcrdv)
+    assert(!debug.LinkCreditOverflow,
         "link credit overflow")
 
     /*
@@ -196,8 +195,8 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     *   The 'monitorCreditConsume' was not allowed to be asserted when there was no 
     *   Link Credit available in the current cycle.
     */
-    io.debug.LinkCreditUnderflow := paramEnableMonitor.B && debugRegMonitorCreditCounter === 0.U && io.monitorCreditConsume
-    assert(!io.debug.LinkCreditUnderflow,
+    debug.LinkCreditUnderflow := paramEnableMonitor.B && debugRegMonitorCreditCounter === 0.U && io.monitorCreditConsume
+    assert(!debug.LinkCreditUnderflow,
         "link credit underflow")
 
 
@@ -223,10 +222,6 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
             // link credit provide output to manager
             val outLinkCreditProvide    = Output(Bool())
             val outLinkCreditReady      = Input(Bool())
-
-            // debug port
-            @DebugSignal
-            val debug                   = new DebugPort
         })
 
 
@@ -260,13 +255,16 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
             val LinkCreditBufferOverflow    = Output(Bool())
         }
 
+        @DebugSignal
+        val debug   = IO(new DebugPort)
+
         /*
         * @assertion LinkCreditBufferOverflow
         *   The 'linkCreditProvide' was not allowed to be asserted when the Link Credit provided exceeded
         *   the maximum number.
         */
-        io.debug.LinkCreditBufferOverflow := logicBufferIncrease && regBufferedCreditCounter === paramMaxCount.U
-        assert(!io.debug.LinkCreditBufferOverflow,
+        debug.LinkCreditBufferOverflow := logicBufferIncrease && regBufferedCreditCounter === paramMaxCount.U
+        assert(!debug.LinkCreditBufferOverflow,
             "link credit buffer overflow")
 
 
