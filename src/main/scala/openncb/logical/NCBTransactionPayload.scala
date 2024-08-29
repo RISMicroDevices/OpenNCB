@@ -77,7 +77,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     wen     : Write Enable.
     * @io input     wstrb   : Write Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     windex  : Write Index, addressing partial data of the transaction,
+    * @io input     windex  : Write Index, one-hot addressing partial data of the transaction,
     *                         which comes from DataID.
     * @io input     wdata   : Write Data.
     * @io input     wmask   : Write Mask, comes from BE.
@@ -85,7 +85,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     ren     : Read Enable.
     * @io input     rstrb   : Read Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     rindex  : Read index, addressing partial data of the transaction,
+    * @io input     rindex  : Read index, one-hot addressing partial data of the transaction,
     *                         which comes from DataID.
     * @io output    rdata   : Read Data.
     */
@@ -93,14 +93,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
         // write signals
         val wen             = Input(Bool())
         val wstrb           = Input(Vec(paramPayloadCapacity, Bool()))
-        val windex          = Input(UInt(paramUpstreamIndexWidth.W))
+        val windex          = Input(Vec(paramUpstreamMaxBeatCount, Bool()))
         val wdata           = Input(UInt(paramUpstreamDataWidth.W))
         val wmask           = Input(UInt(paramUpstreamMaskWidth.W))
 
         // read signals
         val ren             = Input(Bool())
         val rstrb           = Input(Vec(paramPayloadCapacity, Bool()))
-        val rindex          = Input(UInt(paramUpstreamIndexWidth.W))
+        val rindex          = Input(Vec(paramUpstreamMaxBeatCount, Bool()))
         val rdata           = Output(UInt(paramUpstreamDataWidth.W))
 
         // valid signals
@@ -113,7 +113,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     wen     : Write Enable.
     * @io input     wstrb   : Write Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     windex  : Write Index, addressing partial data of the transaction,
+    * @io input     windex  : Write Index, one-hot addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
     * @io input     wdata   : Write Data.
     * @io input     wlast   : Write Data Last, comes from RLAST.
@@ -121,7 +121,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     ren     : Read Enable.
     * @io input     rstrb   : Read Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     rindex  : Read Index, addressing partial data of the transaction,
+    * @io input     rindex  : Read Index, one-hot addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
     * @io output    rdata   : Read Data.
     * @io output    rmask   : Read Mask, which comes from BE, goes to WSTRB.
@@ -130,14 +130,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
         // write signals
         val wen             = Input(Bool())
         val wstrb           = Input(Vec(paramPayloadCapacity, Bool()))
-        val windex          = Input(UInt(paramDownstreamIndexWidth.W))
+        val windex          = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
         val wdata           = Input(UInt(paramDownstreamDataWidth.W))
         val wlast           = Input(Bool())
 
         // read signals
         val ren             = Input(Bool())
         val rstrb           = Input(Vec(paramPayloadCapacity, Bool()))
-        val rindex          = Input(UInt(paramDownstreamIndexWidth.W))
+        val rindex          = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
         val rdata           = Output(UInt(paramDownstreamDataWidth.W))
         val rmask           = Output(UInt(paramDownstreamMaskWidth.W))
 
@@ -206,9 +206,11 @@ class NCBTransactionPayload(implicit val p: Parameters)
             regUpstreamValid(i) := VecInit.fill(paramUpstreamMaxBeatCount)(false.B)
         }
 
-        when (io.upstream.wen & io.upstream.wstrb(i)) {
-            regUpstreamValid(i)(io.upstream.windex) := true.B
-        }
+        (0 until paramUpstreamMaxBeatCount).foreach(j => {
+            when (io.upstream.wen & io.upstream.wstrb(i) & io.upstream.windex(j)) {
+                regUpstreamValid(i)(j) := true.B
+            }
+        })
     })
 
     // Status Payload - Downstream (AXI to CHI) Valid Registers
@@ -232,27 +234,33 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
     (0 until paramPayloadCapacity).foreach(i => {
 
-        when (io.upstream.wen & io.upstream.wstrb(i)) {
+        (0 until paramUpstreamMaxBeatCount).foreach(j => {
 
-            if (paramSlotCatCountUpstream == 1)
-                regData(i)(io.upstream.windex)  := io.upstream.wdata
-            else
-                (0 until paramSlotCatCountUpstream).foreach(i => {
-                    regData(i)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                        io.upstream.wdata.extract(i, paramPayloadSlotDataWidth)
-                })
-        }
+            when (io.upstream.wen & io.upstream.wstrb(i) & io.upstream.windex(j)) {
 
-        when (io.downstream.wen & io.downstream.wstrb(i)) {
-    
-        if (paramSlotCatCountDownstream == 1)
-            regData(i)(io.downstream.windex)    := io.downstream.wdata
-        else
-            (0 until paramSlotCatCountDownstream).foreach(i => {
-                regData(i)(Cat(io.downstream.windex, i.U(log2Up(paramSlotCatCountDownstream).W))) :=
-                    io.downstream.wdata.extract(i, paramPayloadSlotDataWidth)
-            })
-        }
+                if (paramSlotCatCountUpstream == 1)
+                    regData(i)(j)   := io.upstream.wdata
+                else
+                    (0 until paramSlotCatCountUpstream).foreach(i => {
+                        regData(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                            io.upstream.wdata.extract(i, paramPayloadSlotDataWidth)
+                    })
+            }
+        })
+
+        (0 until paramDownstreamMaxBeatCount).foreach(j => {
+
+            when (io.downstream.wen & io.downstream.wstrb(i) & io.downstream.windex(j)) {
+        
+                if (paramSlotCatCountDownstream == 1)
+                    regData(i)(j)   := io.downstream.wdata
+                else
+                    (0 until paramSlotCatCountDownstream).foreach(i => {
+                        regData(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountDownstream).W))) :=
+                            io.downstream.wdata.extract(i, paramPayloadSlotDataWidth)
+                    })
+            }
+        })
     })
 
     
@@ -261,17 +269,19 @@ class NCBTransactionPayload(implicit val p: Parameters)
     val regMask = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotMaskCount, UInt(paramPayloadSlotMaskWidth.W))))
 
     (0 until paramPayloadCapacity).foreach(i => {
+        (0 until paramUpstreamMaxBeatCount).foreach(j => {
 
-        when (io.upstream.wen & io.upstream.wstrb(i)) {
+            when (io.upstream.wen & io.upstream.wstrb(i) & io.upstream.windex(j)) {
 
-            if (paramSlotCatCountUpstream == 1)
-                regMask(i)(io.upstream.windex)  := io.upstream.wmask
-            else
-                (0 until paramSlotCatCountUpstream).foreach(i => {
-                    regMask(i)(Cat(io.upstream.windex, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                        io.upstream.wdata.extract(i, paramPayloadSlotMaskWidth)
-                })
-        }
+                if (paramSlotCatCountUpstream == 1)
+                    regMask(i)(j)   := io.upstream.wmask
+                else
+                    (0 until paramSlotCatCountUpstream).foreach(i => {
+                        regMask(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                            io.upstream.wdata.extract(i, paramPayloadSlotMaskWidth)
+                    })
+            }
+        })
     })
 
     // read concation and connections for payload data and mask registers
@@ -310,20 +320,20 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
 
     // upstream outputs
-    io.upstream.rdata   := ParallelMux(
+    io.upstream.rdata   := ParallelMux(ParallelMux(
         wireDataVecUpstream.zipWithIndex.map(t => (io.upstream.rstrb(t._2), t._1))
-    )(io.upstream.rindex)
+    ).zipWithIndex.map(t => (io.upstream.rindex(t._2), t._1)))
 
     io.upstream.valid   := regDownstreamValid
 
     // downstream outputs
-    io.downstream.rdata := ParallelMux(
+    io.downstream.rdata := ParallelMux(ParallelMux(
         wireDataVecDownstream.zipWithIndex.map(t => (io.downstream.rstrb(t._2), t._1))
-    )(io.downstream.rindex)
+    ).zipWithIndex.map(t => (io.downstream.rindex(t._2), t._1)))
 
-    io.downstream.rmask := ParallelMux(
+    io.downstream.rmask := ParallelMux(ParallelMux(
         wireMaskVecDownstream.zipWithIndex.map(t => (io.downstream.rstrb(t._2), t._1))
-    )(io.downstream.rindex)
+    ).zipWithIndex.map(t => (io.downstream.rindex(t._2), t._1)))
 
     io.downstream.valid := regUpstreamValid
 
