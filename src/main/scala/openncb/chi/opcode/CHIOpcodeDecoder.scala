@@ -53,6 +53,9 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
         val OpcodeUnsupported       = Output(Bool())
         val OpcodeUnknown           = Output(Bool())
     }
+
+    @DebugSignal
+    val debug   = IO(new DebugPort)
     
 
     /*
@@ -69,10 +72,6 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
 
         // decoded output
         val decoded     = Output(Vec(paramDecodedWidth, Bool()))
-
-        // debug port
-        @DebugSignal
-        val debug       = new DebugPort
     })
 
 
@@ -159,14 +158,14 @@ abstract class CHIOpcodeDecoder(val paramChannel                    : EnumCHICha
     
     // debug output
     if (seqLogicUnsupported.isEmpty)
-        io.debug.OpcodeUnsupported  := false.B
+        debug.OpcodeUnsupported  := false.B
     else
-        io.debug.OpcodeUnsupported  := seqLogicUnsupported.reduce(_ || _)
+        debug.OpcodeUnsupported  := seqLogicUnsupported.reduce(_ || _)
 
     if (seqLogicUnknown.isEmpty)
-        io.debug.OpcodeUnknown      := false.B
+        debug.OpcodeUnknown      := false.B
     else
-        io.debug.OpcodeUnknown      := seqLogicUnknown.reduce(_ || _)
+        debug.OpcodeUnknown      := seqLogicUnknown.reduce(_ || _)
 
 
     // utility functions
