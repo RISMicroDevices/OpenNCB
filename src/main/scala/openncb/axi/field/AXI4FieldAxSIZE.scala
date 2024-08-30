@@ -17,8 +17,11 @@ import cn.rismd.openncb.axi.field.AXI4FieldAxSIZE.{Size128B => Size128B}
 sealed class EnumAXI4FieldAxSIZE(ordinal            : Int,
                                  name               : String,
                                  val value          : Int,
-                                 val displayName    : String)
+                                 val displayName    : String,
+                                 val sizeInBytes    : Int)
         extends Enum[EnumAXI4FieldAxSIZE](name, ordinal) {
+
+    def sizeInBits = sizeInBytes * 8
 
     /* 
     * Hardware decoder.
@@ -47,14 +50,14 @@ object AXI4FieldAxSIZE {
     /*
     * AxSIZE field enumerations. 
     */
-    val Size1B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(0, "Size1B"  , SIZE_1B  , "1B"  )
-    val Size2B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(1, "Size2B"  , SIZE_2B  , "2B"  )
-    val Size4B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(2, "Size4B"  , SIZE_4B  , "4B"  )
-    val Size8B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(3, "Size8B"  , SIZE_8B  , "8B"  )
-    val Size16B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(4, "Size16B" , SIZE_16B , "16B" )
-    val Size32B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(5, "Size32B" , SIZE_32B , "32B" )
-    val Size64B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(6, "Size64B" , SIZE_64B , "64B" )
-    val Size128B            : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(7, "Size128B", SIZE_128B, "128B")
+    val Size1B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(0, "Size1B"  , SIZE_1B  , "1B"  , 1  )
+    val Size2B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(1, "Size2B"  , SIZE_2B  , "2B"  , 2  )
+    val Size4B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(2, "Size4B"  , SIZE_4B  , "4B"  , 4  )
+    val Size8B              : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(3, "Size8B"  , SIZE_8B  , "8B"  , 8  )
+    val Size16B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(4, "Size16B" , SIZE_16B , "16B" , 16 )
+    val Size32B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(5, "Size32B" , SIZE_32B , "32B" , 32 )
+    val Size64B             : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(6, "Size64B" , SIZE_64B , "64B" , 64 )
+    val Size128B            : EnumAXI4FieldAxSIZE   = new EnumAXI4FieldAxSIZE(7, "Size128B", SIZE_128B, "128B", 128)
     /**/
 
     /*
