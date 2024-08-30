@@ -4,7 +4,7 @@ import chisel3._
 
 
 /*
-* Valid Mux.
+* Valid Mux with X,Z-state blocking.
 * 
 * * The output is forced to all zero when 'valid' not asserted. 
 */
@@ -17,9 +17,24 @@ object ValidMux {
         Mux(valid, bits, dontTouch(WireInit(0.U.asTypeOf(bits)))) 
 }
 
+/*
+* Valid Mux with X,Z-state passing.
+* 
+* * The output is forced to all zero when 'valid' not asserted. 
+*/
+object ValidPassMux {
+
+    def apply(valid: Bool, bit: Bool): Bool =
+        Mux(valid, bit, false.B)
+
+    def apply[T <: Data](valid: Bool, bits: T): T =
+        Mux(valid, bits, 0.U.asTypeOf(bits)) 
+}
+
 
 /*
-* Barrier of X-state and Z-state for SystemVerilog simulation by valid signal. 
+* Barrier of X-state and Z-state for SystemVerilog simulation by valid signal,
+* structurally works as a ValidMux.
 * 
 * * NOTICE: Not recommended to be applied for multi-bit critical control paths
 *           or wide data paths,
