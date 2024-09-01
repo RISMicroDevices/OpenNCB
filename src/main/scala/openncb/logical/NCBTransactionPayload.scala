@@ -14,6 +14,7 @@ import cn.rismd.openncb.chi.CHIConstants
 import chisel3.util.Cat
 import cn.rismd.openncb.debug.DebugBundle
 import cn.rismd.openncb.debug.DebugSignal
+import freechips.rocketchip.util.SeqToAugmentedSeq
 
 
 /*
@@ -31,6 +32,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
         extends Module with WithAXI4Parameters 
                        with WithCHIParameters 
                        with WithNCBParameters {
+
+    //
+    protected def isPower2Mult(a2n: Int, a: Int): Boolean = {
+        val q = a2n / a
+        val m = a2n % a
+        a2n != 0 && a2n > a && m == 0 && (q & (q - 1)) == 0
+    }
+
 
     // public parameters
     val param   = p.lift(NCBTransactionPayload.ParametersKey)
@@ -110,27 +119,26 @@ class NCBTransactionPayload(implicit val p: Parameters)
         }
 
         // valid signals
-        val valid           = Output(Vec(paramPayloadCapacity, Bool()))
+        val valid           = Output(Vec(paramPayloadCapacity, Vec(paramUpstreamMaxBeatCount, Bool())))
     }
 
     /*
     * Port I/O: Downstream (AXI4 domain) 
     * 
-    * @io input     wen     : Write Enable.
-    * @io input     wstrb   : Write Strobe, one-hot addressing the transaction entry in payload memory,
+    * @io input     w.en    : Write Enable.
+    * @io input     w.strb  : Write Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     windex  : Write Index, one-hot addressing partial data of the transaction,
+    * @io input     w.index : Write Index, one-hot addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
-    * @io input     wdata   : Write Data.
-    * @io input     wlast   : Write Data Last, comes from RLAST.
+    * @io input     w.data  : Write Data.
     * 
-    * @io input     ren     : Read Enable.
-    * @io input     rstrb   : Read Strobe, one-hot addressing the transaction entry in payload memory,
+    * @io input     r.en    : Read Enable.
+    * @io input     r.strb  : Read Strobe, one-hot addressing the transaction entry in payload memory,
     *                         which comes from NCB-allocated Transaction ID.
-    * @io input     rindex  : Read Index, one-hot addressing partial data of the transaction,
+    * @io input     r.index : Read Index, one-hot addressing partial data of the transaction,
     *                         which comes from AXI4 Reading Progress.
-    * @io output    rdata   : Read Data.
-    * @io output    rmask   : Read Mask, which comes from BE, goes to WSTRB.
+    * @io output    r.data  : Read Data.
+    * @io output    r.mask  : Read Mask, which comes from BE, goes to WSTRB.
     */
     class DownstreamPort extends Bundle {
         // write signals
@@ -139,7 +147,6 @@ class NCBTransactionPayload(implicit val p: Parameters)
             val strb            = Input(Vec(paramPayloadCapacity, Bool()))
             val index           = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
             val data            = Input(UInt(paramDownstreamDataWidth.W))
-            val last            = Input(Bool())
         }
 
         // read signals
@@ -152,7 +159,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
         }
 
         // valid signals
-        val valid           = Vec(paramPayloadCapacity, Vec(paramUpstreamMaxBeatCount, Bool()))
+        val valid           = Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool()))
     }
 
     /*
@@ -224,18 +231,20 @@ class NCBTransactionPayload(implicit val p: Parameters)
     })
 
     // Status Payload - Downstream (AXI to CHI) Valid Registers
-    val regDownstreamValid  = RegInit(Vec(paramPayloadCapacity, Bool()), 
-        init = VecInit(Seq.fill(paramPayloadCapacity)(false.B)))
+    val regDownstreamValid  = RegInit(Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool())), 
+        init = VecInit.fill(paramPayloadCapacity, paramDownstreamMaxBeatCount)(false.B))
 
     (0 until paramPayloadCapacity).foreach(i => {
 
         when (io.allocate.en & io.allocate.strb(i)) {
-            regDownstreamValid(i)   := false.B
+            regDownstreamValid(i) := VecInit.fill(paramDownstreamMaxBeatCount)(false.B)
         }
 
-        when (io.downstream.w.en & io.downstream.w.last & io.downstream.w.strb(i)) {
-            regDownstreamValid(i)   := true.B
-        }
+        (0 until paramDownstreamMaxBeatCount).foreach(j => {
+            when (io.downstream.w.en & io.downstream.w.strb(i) & io.downstream.w.index(j)) {
+                regDownstreamValid(i)(j) := true.B
+            }
+        })
     })
 
 
@@ -334,7 +343,40 @@ class NCBTransactionPayload(implicit val p: Parameters)
         wireDataVecUpstream.zipWithIndex.map(t => (io.upstream.r.strb(t._2), t._1))
     ).zipWithIndex.map(t => (io.upstream.r.index(t._2), t._1)))
 
-    io.upstream.valid   := regDownstreamValid
+    if (paramUpstreamMaxBeatCount == paramDownstreamMaxBeatCount)
+    {
+        io.upstream.valid   := regDownstreamValid
+    }
+    else if (paramUpstreamMaxBeatCount > paramDownstreamMaxBeatCount)
+    {
+        require(isPower2Mult(paramUpstreamMaxBeatCount, paramDownstreamMaxBeatCount),
+            s"NCB Internal Error: power2mult fail: ${paramUpstreamMaxBeatCount}, ${paramDownstreamMaxBeatCount}")
+
+        val splitWidth  = paramUpstreamMaxBeatCount / paramDownstreamMaxBeatCount
+
+        io.upstream.valid.zipWithIndex.foreach({ case (out, n) => {
+            regDownstreamValid(n).zipWithIndex.foreach({ case (valid, i) => {
+                (0 until splitWidth).foreach(j => {
+                    out(i * splitWidth + j) := valid
+                })
+            }})
+        }})
+    }
+    else
+    {
+        require(isPower2Mult(paramDownstreamMaxBeatCount, paramUpstreamMaxBeatCount),
+            s"NCB Internal Error: power2mult fail: ${paramDownstreamMaxBeatCount}, ${paramUpstreamMaxBeatCount}")
+
+        val mergeWidth  = paramDownstreamMaxBeatCount / paramUpstreamMaxBeatCount
+
+        io.upstream.valid.zipWithIndex.foreach({ case (out, n) => {
+            out.zipWithIndex.foreach({ case (out, i) => {
+                out := VecInit(
+                    (0 until mergeWidth).map(j => regDownstreamValid(n)(i * mergeWidth + j))
+                ).asUInt.andR
+            }})
+        }})
+    }
 
     // downstream outputs
     io.downstream.r.data    := ParallelMux(ParallelMux(
@@ -345,7 +387,40 @@ class NCBTransactionPayload(implicit val p: Parameters)
         wireMaskVecDownstream.zipWithIndex.map(t => (io.downstream.r.strb(t._2), t._1))
     ).zipWithIndex.map(t => (io.downstream.r.index(t._2), t._1)))
 
-    io.downstream.valid := regUpstreamValid
+    if (paramDownstreamMaxBeatCount == paramUpstreamMaxBeatCount)
+    {
+        io.downstream.valid := regUpstreamValid
+    }
+    else if (paramDownstreamMaxBeatCount > paramUpstreamMaxBeatCount)
+    {
+        require(isPower2Mult(paramDownstreamMaxBeatCount, paramUpstreamMaxBeatCount),
+            s"NCB Internal Error: power2mult fail: ${paramDownstreamMaxBeatCount}, ${paramUpstreamMaxBeatCount}")
+
+        val splitWidth  = paramDownstreamMaxBeatCount / paramUpstreamMaxBeatCount
+
+        io.downstream.valid.zipWithIndex.foreach({ case (out, n) => {
+            regUpstreamValid(n).zipWithIndex.foreach({ case (valid, i) => {
+                (0 until splitWidth).foreach(j => {
+                    out(i * splitWidth + j) := valid
+                })
+            }})
+        }})
+    }
+    else
+    {
+        require(isPower2Mult(paramUpstreamMaxBeatCount, paramDownstreamMaxBeatCount),
+            s"NCB Internal Error: power2mult fail: ${paramUpstreamMaxBeatCount}, ${paramDownstreamMaxBeatCount}")
+
+        val mergeWidth  = paramUpstreamMaxBeatCount / paramDownstreamMaxBeatCount
+
+        io.downstream.valid.zipWithIndex.foreach({ case (out, n) => {
+            out.zipWithIndex.foreach({ case (out, i) => {
+                out := VecInit(
+                    (0 until mergeWidth).map(j => regUpstreamValid(n)(i * mergeWidth + j))
+                ).asUInt.andR
+            }})
+        }})
+    }
 
 
     // Debug Info - Transaction Allocation Table
