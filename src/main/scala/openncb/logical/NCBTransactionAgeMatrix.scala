@@ -18,11 +18,7 @@ object NCBTransactionAgeMatrix {
     case object ParametersKey extends Field[Parameters]
 }
 
-/*
-* @param parmaSelectPortCount   : Count of selection port. 
-*/
-class NCBTransactionAgeMatrix(val paramSelectPortCount      : Int)
-        (implicit val p: Parameters)
+class NCBTransactionAgeMatrix(implicit val p: Parameters)
         extends Module with WithNCBParameters {
     
     // public parameters
