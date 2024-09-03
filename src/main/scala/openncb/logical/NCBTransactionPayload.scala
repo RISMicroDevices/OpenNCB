@@ -184,7 +184,6 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     strb    : Free Strobe, one-hot.
     */
     class FreePort extends Bundle {
-        val en              = Input(Bool())
         val strb            = Input(Vec(paramPayloadCapacity, Bool()))
     }
 
@@ -438,7 +437,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
             regTransactionTable.upload  (i) := io.allocate.upload
         }
 
-        when (io.free.en & io.free.strb(i)) {
+        when (io.free.strb(i)) {
             regTransactionTable.valid   (i) := false.B
         }
     })
@@ -482,7 +481,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     *   allocation must have been performed.
     */
     (0 until paramPayloadCapacity).foreach(i => {
-        debug.DoubleFreeOrCorruptionException(i) := io.free.en && io.free.strb(i) && !regTransactionTable.valid(i)
+        debug.DoubleFreeOrCorruptionException(i) := io.free.strb(i) && !regTransactionTable.valid(i)
         assert(!debug.DoubleFreeOrCorruptionException(i),
             s"double free or corruption at [${i}]")
     })
