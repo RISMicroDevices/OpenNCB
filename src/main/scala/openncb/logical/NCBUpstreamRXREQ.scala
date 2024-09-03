@@ -70,6 +70,7 @@ object NCBUpstreamRXREQ {
     @CompanionConnection
     def apply(uLinkActiveManager    : CHILinkActiveManagerRX,
               uTransactionFreeList  : NCBTransactionFreeList,
+              uTransactionAgeMatrix : NCBTransactionAgeMatrix,
               uOrderAddressCAM      : NCBOrderAddressCAM,
               uOrderRequestCAM      : NCBOrderRequestCAM,
               uTransactionQueue     : NCBTransactionQueue,
@@ -77,6 +78,7 @@ object NCBUpstreamRXREQ {
              (implicit p: Parameters) = {
         val u   = Module(new NCBUpstreamRXREQ(uLinkActiveManager,
                                               uTransactionFreeList,
+                                              uTransactionAgeMatrix,
                                               uOrderAddressCAM,
                                               uOrderRequestCAM,
                                               uTransactionQueue,
@@ -86,7 +88,11 @@ object NCBUpstreamRXREQ {
         u.io.linkState <> uLinkActiveManager.io.linkState
 
         // companion connection: NCBTransactionFreeList
-        u.io.freeListAllocate <> uTransactionFreeList.io.allocate
+        u.io.freeListAllocate   <> uTransactionFreeList.io.allocate
+        u.io.freeListFree       <> uTransactionFreeList.io.free
+
+        // companion connection: NCBTransactionAgeMatrix
+        u.io.ageUpdate <> uTransactionAgeMatrix.io.update
 
         // companion connection: NCBOrderAddressCAM
         u.io.addressOrderAllocate   <> uOrderAddressCAM.io.allocate
@@ -103,7 +109,8 @@ object NCBUpstreamRXREQ {
         u.io.queueFree      <> uTransactionQueue.io.free
         
         // companion connection: NCBTransactionPayload
-        u.io.payloadAllocate <> uTransactionPayload.io.allocate
+        u.io.payloadAllocate    <> uTransactionPayload.io.allocate
+        u.io.payloadFree        <> uTransactionPayload.io.free
 
         u
     }
@@ -117,6 +124,7 @@ object NCBUpstreamRXREQ {
 */
 class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
                        val uTransactionFreeList     : NCBTransactionFreeList,
+                       val uTransactionAgeMatrix    : NCBTransactionAgeMatrix,
                        val uOrderAddressCAM         : NCBOrderAddressCAM,
                        val uOrderRequestCAM         : NCBOrderRequestCAM,
                        val uTransactionQueue        : NCBTransactionQueue,
@@ -141,7 +149,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
 
     protected def paramUpstreamMaxBeatCountWidth    = log2Up(paramUpstreamMaxBeatCount)
 
-    protected def paramDownstreamMaxBeatCount       = CHIConstants.CHI_MAX_PACKET_DATA_BITS_WIDTH / paramCHI.dataWidth
+    protected def paramDownstreamMaxBeatCount       = CHIConstants.CHI_MAX_PACKET_DATA_BITS_WIDTH / paramAXI4.dataWidth
 
     protected def paramDownstreamMaxBeatCountWidth  = log2Up(paramDownstreamMaxBeatCount)
 
@@ -166,6 +174,14 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         // Allocate Port to NCBTransactionFreeList
         @CompanionConnection
         val freeListAllocate        = Flipped(chiselTypeOf(uTransactionFreeList.io.allocate))
+
+        // Free Port to NCBTransactionFreeList
+        @CompanionConnection
+        val freeListFree            = Flipped(chiselTypeOf(uTransactionFreeList.io.free))
+
+        // Update Port to NCBTransactionAgeMatrix
+        @CompanionConnection
+        val ageUpdate               = Flipped(chiselTypeOf(uTransactionAgeMatrix.io.update))
 
         // Allocate Port to NCBOrderAddressCAM
         @CompanionConnection
@@ -194,6 +210,10 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         // Allocate Port to NCBTransactionPayload
         @CompanionConnection
         val payloadAllocate         = Flipped(chiselTypeOf(uTransactionPayload.io.allocate))
+
+        // Free Port to NCBTransactionPayload
+        @CompanionConnection
+        val payloadFree             = Flipped(chiselTypeOf(uTransactionPayload.io.free))
 
         // Allocate Port to NCBTransactionQueue
         @CompanionConnection
@@ -254,8 +274,12 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         logicFreeCredit
     }
 
+    io.freeListFree.strb        := io.queueFree.strb
+
     io.addressOrderFree.strb    := io.queueFree.strb
     io.requestOrderFree.strb    := io.queueFree.strb
+
+    io.payloadFree.strb         := io.queueFree.strb
 
 
     // Module: CHI Opcode Decoder
@@ -299,6 +323,10 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.payloadAllocate.en       := regRXREQ.flitv & !logicLCrdReturn
     io.payloadAllocate.strb     := io.freeListAllocate.strb
     io.payloadAllocate.upload   := logicTransactionRead
+
+    // age matrix update
+    io.ageUpdate.en     := regRXREQ.flitv & !logicLCrdReturn
+    io.ageUpdate.strb   := io.freeListAllocate.strb
 
 
     // address order allocation
