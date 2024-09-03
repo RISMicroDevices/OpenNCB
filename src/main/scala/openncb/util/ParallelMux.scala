@@ -51,8 +51,5 @@ object ParallelMux {
     * @param in     Sequence of (Selection Enable, Data). 
     */
     def apply[T <: Data](in: Seq[(Bool, T)]): T =
-        ParallelOR(in.map({ case (en, x) => {
-            val xu = x.asUInt
-            (xu & VecInit.fill(xu.getWidth)(en).asUInt).asTypeOf(x)
-        } }))
+        ParallelOR(in.map({ case (en, x) => ValidMux(en, x) }))
 }

@@ -4,27 +4,16 @@ import chisel3._
 
 
 /*
-* Valid Mux with X,Z-state blocking.
+* Valid Mux.
+* 
+* * The X,Z-state was consumed by Mux with AND or tertiary operator
+*   operations.
 * 
 * * The output is forced to all zero when 'valid' not asserted. 
 */
 object ValidMux {
 
-    def apply(valid: Bool, bit: Bool): Bool =
-        Mux(valid, bit, dontTouch(WireInit(false.B)))
-
-    def apply[T <: Data](valid: Bool, bits: T): T =
-        Mux(valid, bits, dontTouch(WireInit(0.U.asTypeOf(bits)))) 
-}
-
-/*
-* Valid Mux with X,Z-state passing.
-* 
-* * The output is forced to all zero when 'valid' not asserted. 
-*/
-object ValidPassMux {
-
-    def apply(valid: Bool, bit: Bool): Bool =
+    def apply(valid: Bool, bit: Bool): Bool = 
         Mux(valid, bit, false.B)
 
     def apply[T <: Data](valid: Bool, bits: T): T =
