@@ -61,5 +61,10 @@ object CHIFieldUInt {
 
         return None
     }
+
+    def apply(width: Int, off: Int, field: Option[UInt], issues: EnumCHIIssue*)
+             (implicit p: Parameters): Option[UInt] = {
+        apply(width - 1, 0, off, field, issues:_*)
+    }
 }
 /**/
