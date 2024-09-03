@@ -167,7 +167,7 @@ class NCBUpstreamRXDAT(val uLinkActiveManager       : CHILinkActiveManagerRX,
         if (paramMaxBeatCount == 4) {
             VecInit(UIntToOH(regRXDAT.flit.DataID.get, 4).asBools)
         } else if (paramMaxBeatCount == 2) {
-            VecInit(UIntToOH(regRXDAT.flit.DataID.get(1, 1), 4).asBools)
+            VecInit(UIntToOH(regRXDAT.flit.DataID.get(1, 1), 2).asBools)
         } else if (paramMaxBeatCount == 1) {
             VecInit(true.B)
         } else {
