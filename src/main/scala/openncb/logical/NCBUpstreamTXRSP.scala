@@ -1,7 +1,9 @@
 package cn.rismd.openncb.logical
 
 import chisel3._
+import chisel3.util.Cat
 import chisel3.util.OHToUInt
+import chisel3.util.log2Up
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
 import cn.rismd.openncb.WithNCBParameters
@@ -154,8 +156,9 @@ class NCBUpstreamTXRSP(val uLinkActiveManager       : CHILinkActiveManagerTX,
     }
 
     // transaction go
-    io.queueUpstream.opRead   .strb     := io.ageSelect.out
-    io.queueUpstream.infoRead .strb     := io.ageSelect.out
+    io.queueUpstream.opRead     .strb   := io.ageSelect.out
+    io.queueUpstream.infoRead   .strb   := io.ageSelect.out
+    io.queueUpstream.operandRead.strb   := io.ageSelect.out
 
     io.queueUpstream.opDone.strb    := ValidMux(uLinkCredit.io.linkCreditAvailable, io.ageSelect.out)
     io.queueUpstream.opDone.bits    := logicOpDoneSelect
@@ -178,9 +181,11 @@ class NCBUpstreamTXRSP(val uLinkActiveManager       : CHILinkActiveManagerTX,
         ))
         regTXRSPFlitPend.flit.RespErr   .get := io.queueUpstream.operandRead.bits.WriteRespErr
         regTXRSPFlitPend.flit.Resp      .get := 0.U
-        regTXRSPFlitPend.flit.FwdState  .get := 0.U
-        regTXRSPFlitPend.flit.DataPull  .get := 0.U
-        regTXRSPFlitPend.flit.DBID      .get := OHToUInt(io.ageSelect.out)
+        regTXRSPFlitPend.flit.FwdState  (0.U)
+        regTXRSPFlitPend.flit.DataPull  (0.U)
+        regTXRSPFlitPend.flit.DBID      (Cat(
+            0.U((paramCHI.rspDBIDWidth - log2Up(io.ageSelect.out.getWidth)).W),
+            OHToUInt(io.ageSelect.out)))
         regTXRSPFlitPend.flit.PCrdType  .get := 0.U
         regTXRSPFlitPend.flit.TraceTag  .get := 0.U
     }
