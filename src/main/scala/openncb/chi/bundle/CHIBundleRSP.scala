@@ -30,8 +30,13 @@ class CHIBundleRSP(implicit p: Parameters) extends AbstractCHIBundle {
             paramCHI.rspFwdStateWidth 
         max paramCHI.rspDataPullWidth)
 
-    def FwdState        = CHIFieldUInt(paramCHI.rspFwdStateWidth    - 1, 0, 0, FwdState_DataPull)
-    def DataPull        = CHIFieldUInt(paramCHI.rspDataPullWidth    - 1, 0, 0, FwdState_DataPull)
+    def FwdState        = CHIFieldUInt(paramCHI.rspFwdStateWidth, 0, FwdState_DataPull)
+    def DataPull        = CHIFieldUInt(paramCHI.rspDataPullWidth, 0, FwdState_DataPull)
+
+    def FwdState    (fwdState   : UInt) = CHIFieldAssign(FwdState_DataPull,
+                                            (paramCHI.rspFwdStateWidth, 0, fwdState))
+    def DataPull    (dataPull   : UInt) = CHIFieldAssign(FwdState_DataPull,
+                                            (paramCHI.rspDataPullWidth, 0, dataPull))
     //  ----------------------------------------------------------------
     val CBusy           = CHIFieldUInt(paramCHI.rspCBusyWidth, EnumCHIIssue.E)
     //  ----------------------------------------------------------------
@@ -41,10 +46,19 @@ class CHIBundleRSP(implicit p: Parameters) extends AbstractCHIBundle {
         max paramCHI.rspStashGroupIDWidth
         max paramCHI.rspTagGroupIDWidth)
 
-    def DBID            = CHIFieldUInt(paramCHI.rspDBIDWidth        - 1, 0, 0, DBID_PGroupID_StashGroupID_TagGroupID)
-    def PGroupID        = CHIFieldUInt(paramCHI.rspPGroupIDWidth    - 1, 0, 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
-    def StashGroupID    = CHIFieldUInt(paramCHI.rspStashGroupIDWidth- 1, 0, 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
-    def TagGroupID      = CHIFieldUInt(paramCHI.rspTagGroupIDWidth  - 1, 0, 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
+    def DBID            = CHIFieldUInt(paramCHI.rspDBIDWidth        , 0, DBID_PGroupID_StashGroupID_TagGroupID)
+    def PGroupID        = CHIFieldUInt(paramCHI.rspPGroupIDWidth    , 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
+    def StashGroupID    = CHIFieldUInt(paramCHI.rspStashGroupIDWidth, 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
+    def TagGroupID      = CHIFieldUInt(paramCHI.rspTagGroupIDWidth  , 0, DBID_PGroupID_StashGroupID_TagGroupID, EnumCHIIssue.E)
+
+    def DBID        (dbid           : UInt) = CHIFieldAssign(DBID_PGroupID_StashGroupID_TagGroupID,
+                                                (paramCHI.rspDBIDWidth          , 0, dbid))
+    def PGroupID    (pGroupID       : UInt) = CHIFieldAssign(DBID_PGroupID_StashGroupID_TagGroupID,
+                                                (paramCHI.rspPGroupIDWidth      , 0, pGroupID))
+    def StashGroupID(stashGroupID   : UInt) = CHIFieldAssign(DBID_PGroupID_StashGroupID_TagGroupID,
+                                                (paramCHI.rspStashGroupIDWidth  , 0, stashGroupID))
+    def TagGroupID  (tagGroupID     : UInt) = CHIFieldAssign(DBID_PGroupID_StashGroupID_TagGroupID,
+                                                (paramCHI.rspTagGroupIDWidth    , 0, tagGroupID))
     //  ----------------------------------------------------------------
     val PCrdType        = CHIFieldUInt(paramCHI.rspPCrdTypeWidth)
     //  ----------------------------------------------------------------
