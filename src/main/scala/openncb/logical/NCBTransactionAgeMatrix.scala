@@ -50,8 +50,8 @@ class NCBTransactionAgeMatrix(val paramSelectPortCount      : Int)
     * @io output    out     : Output valid after selection.
     */
     class SelectPort extends Bundle {
-        val in          = Input (Vec(paramSelectPortCount, Vec(paramNCB.outstandingDepth, Bool())))
-        val out         = Output(Vec(paramSelectPortCount, Vec(paramNCB.outstandingDepth, Bool())))
+        val in          = Input (Vec(paramNCB.outstandingDepth, Bool()))
+        val out         = Output(Vec(paramNCB.outstandingDepth, Bool()))
     }
 
 
@@ -62,8 +62,11 @@ class NCBTransactionAgeMatrix(val paramSelectPortCount      : Int)
         // update port
         val update      = new UpdatePort
 
-        // selection port
-        val select      = new SelectPort
+        // selection port for TXRSP
+        val selectTXRSP = new SelectPort
+
+        // selection port for TXDAT
+        val selectTXDAT = new SelectPort
     })
 
 
@@ -101,11 +104,13 @@ class NCBTransactionAgeMatrix(val paramSelectPortCount      : Int)
 
 
     // selection logic
-    io.select.in.zip(io.select.out).foreach({ case (in, out) => {
-
-        out := VecInit((0 until paramNCB.outstandingDepth).map(i => {
+    Seq(
+        io.selectTXRSP,
+        io.selectTXDAT
+    ).foreach (select => {
+        select.out := VecInit((0 until paramNCB.outstandingDepth).map(i => {
             (VecInit((0 until paramNCB.outstandingDepth)
-                .map(j => scalaGetAge(i, j))).asUInt | ~in.asUInt).andR & in(i)
+                .map(j => scalaGetAge(i, j))).asUInt | ~select.in.asUInt).andR & select.in(i)
         }))
-    } })
+    })
 }
