@@ -14,6 +14,10 @@ package object field {
     implicit class fromEnumCHIFieldOrderToUInt(field: EnumCHIFieldOrder) {
         def U: UInt = field.value.U
     }
+
+    implicit class fromEnumCHIFieldRespErrToUInt(field: EnumCHIFieldRespErr) {
+        def U: UInt = field.value.U
+    }
     /**/
 }
 
