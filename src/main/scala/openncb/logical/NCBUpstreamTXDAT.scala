@@ -169,6 +169,7 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
     // transaction go
     io.queueUpstream.opRead     .strb := io.ageSelect.out
     io.queueUpstream.infoRead   .strb := io.ageSelect.out
+    io.queueUpstream.operandRead.strb := io.ageSelect.out
 
     io.queueUpstream.opDone.strb    := ValidMux(uLinkCredit.io.linkCreditAvailable, io.ageSelect.out)
     io.queueUpstream.opDone.bits    := logicOpDoneSelect
@@ -207,9 +208,9 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
         regTXDATFlitPend.flit.Opcode        .get := CompData.U
         regTXDATFlitPend.flit.RespErr       .get := io.queueUpstream.operandRead.bits.ReadRespErr
         regTXDATFlitPend.flit.Resp          .get := 0.U
-        regTXDATFlitPend.flit.FwdState      .get := 0.U
-        regTXDATFlitPend.flit.DataPull      .get := 0.U
-        regTXDATFlitPend.flit.DataSource    .get := 0.U 
+        regTXDATFlitPend.flit.FwdState      (0.U)
+        regTXDATFlitPend.flit.DataPull      (0.U)
+        regTXDATFlitPend.flit.DataSource    (0.U) 
         regTXDATFlitPend.flit.DBID          .get := {
             if (paramNCB.readCompDMT)
                 io.queueUpstream.infoRead.bits.TxnID
@@ -219,10 +220,7 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
         regTXDATFlitPend.flit.CCID          .get := io.queueUpstream.operandRead.bits.Addr(5, 4)
         regTXDATFlitPend.flit.DataID        .get := OHToUInt(io.queueUpstream.operandRead.bits.Critical)
         regTXDATFlitPend.flit.TraceTag      .get := 0.U
-        regTXDATFlitPend.flit.RSVDC         .get := 0.U
         regTXDATFlitPend.flit.BE            .get := 0.U
         regTXDATFlitPend.flit.Data          .get := io.queuePayloadRead.data
-        regTXDATFlitPend.flit.DataCheck     .get := 0.U
-        regTXDATFlitPend.flit.Poison        .get := 0.U
     }
 }
