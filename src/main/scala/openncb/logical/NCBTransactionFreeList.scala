@@ -48,7 +48,6 @@ class NCBTransactionFreeList(implicit val p: Parameters)
     * @io output    strb    : Free Strobe.
     */
     class FreePort extends Bundle {
-        val en          = Input(Bool())
         val strb        = Input(Vec(paramNCB.outstandingDepth, Bool()))
     }
 
@@ -83,7 +82,7 @@ class NCBTransactionFreeList(implicit val p: Parameters)
             regFree(i)  := false.B
         }
 
-        when (io.free.en & io.free.strb(i)) {
+        when (io.free.strb(i)) {
             regFree(i)  := true.B
         }
     })
@@ -120,7 +119,7 @@ class NCBTransactionFreeList(implicit val p: Parameters)
     *   Free operation was not allowed on free slots.
     */
     (0 until paramNCB.outstandingDepth).foreach(i => {
-        debug.DoubleFreeOrCorruption(i) := io.free.en && io.free.strb(i) && regFree(i)
+        debug.DoubleFreeOrCorruption(i) := io.free.strb(i) && regFree(i)
         assert(!debug.DoubleFreeOrCorruption(i),
             s"free list double free or corruption at ${i}")
     })
