@@ -4,8 +4,8 @@ import scala.annotation.StaticAnnotation
 
 
 /*
-* Annotation for debug signals.
+* Annotation for debug-purpose elements.
 * 
 * * NOTICE: Reserved for furture use, recommended to embed this in code. 
 */
-final class DebugSignal extends StaticAnnotation
+final class DebugElement extends StaticAnnotation
