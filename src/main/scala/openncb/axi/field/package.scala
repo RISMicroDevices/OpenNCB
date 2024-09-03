@@ -14,6 +14,10 @@ package object field {
     implicit class fromEnumAXI4FieldAxSIZEToUInt(field: EnumAXI4FieldAxSIZE) {
         def U: UInt = field.value.U
     }
+
+    implicit class fromEnumAXI4FieldRESPToUInt(field: EnumAXI4FieldRESP) {
+        def U: UInt = field.value.U
+    }
     /**/
 }
 
