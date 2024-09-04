@@ -12,9 +12,11 @@ import cn.rismd.openncb.chi.opcode.CHISNFOpcodesRSP
 import cn.rismd.openncb.chi.channel.CHIChannelTXRSP
 import cn.rismd.openncb.logical.chi.CHILinkActiveManagerTX
 import cn.rismd.openncb.logical.chi.CHILinkCreditManagerTX
-import cn.rismd.openncb.debug.CompanionConnection
 import cn.rismd.openncb.util.ValidMux
 import cn.rismd.openncb.util.ParallelMux
+import cn.rismd.openncb.debug.CompanionConnection
+import cn.rismd.openncb.debug.DebugBundle
+import cn.rismd.openncb.debug.DebugSignal
 
 
 /*
@@ -189,4 +191,19 @@ class NCBUpstreamTXRSP(val uLinkActiveManager       : CHILinkActiveManagerTX,
         regTXRSPFlitPend.flit.PCrdType  .get := 0.U
         regTXRSPFlitPend.flit.TraceTag  .get := 0.U
     }
+
+    
+    // assertions & debugs
+    /*
+    * Port I/O: Debug
+    */
+    class DebugPort extends DebugBundle {
+        // submodule
+        val linkCredit                      = chiselTypeOf(uLinkCredit.debug)
+    }
+
+    @DebugSignal
+    val debug   = IO(new DebugPort)
+
+    debug.linkCredit <> uLinkCredit.debug
 }
