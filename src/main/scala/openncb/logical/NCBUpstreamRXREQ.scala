@@ -459,7 +459,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.op.axi.WriteAddress.valid     := logicTransactionWrite
     io.queueAllocate.bits.op.axi.WriteAddress.barrier.CHIWriteBackData := {
         (paramNCB.writeNoError == true).B && !uDecoder.is(WriteNoSnpFull)
-    }
+    } || paramNCB.axiAWAfterFirstData.B
 
     // allocate AXI operation 'WriteData'
     io.queueAllocate.bits.op.axi.WriteData      .valid  := logicTransactionWrite
