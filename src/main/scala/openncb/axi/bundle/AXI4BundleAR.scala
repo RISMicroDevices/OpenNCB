@@ -8,7 +8,7 @@ import cn.rismd.openncb.axi._
 /* 
 * Read address channel signals bundle.
 */
-class AXI4BundleAR(implicit val p: Parameters) extends AbstractAXI4Bundle {
+class AXI4BundleAR(implicit p: Parameters) extends AbstractAXI4Bundle {
 
     // id       [idWidth - 1:0]     : 'ARID' - Read address ID.
     val id          = UInt(p(AXI4ParametersKey).idWidth.W)
