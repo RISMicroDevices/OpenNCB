@@ -8,13 +8,13 @@ import cn.rismd.openncb.chi.bundle._
 /*
 * CHI DAT Channel.
 */
-class CHIChannelDAT[+T <: CHIBundleDAT](gen: T)(implicit p: Parameters) extends CHIChannel[T](gen)
+class CHIChannelDAT[+T <: CHIBundleDAT](gen: T) extends CHIChannel[T](gen)
 
 
 // TXDAT Channel.
 object CHIChannelTXDAT {
 
-    def apply[T <: CHIBundleDAT](gen: T)(implicit p: Parameters) = new CHIChannelDAT(gen)
+    def apply[T <: CHIBundleDAT](gen: T) = new CHIChannelDAT(gen)
 
     def apply()(implicit p: Parameters) = new CHIChannelDAT(new CHIBundleDAT)
 }
@@ -22,7 +22,7 @@ object CHIChannelTXDAT {
 // RXDAT Channel.
 object CHIChannelRXDAT {
 
-    def apply[T <: CHIBundleDAT](gen: T)(implicit p: Parameters) = Flipped(new CHIChannelDAT(gen))
+    def apply[T <: CHIBundleDAT](gen: T) = Flipped(new CHIChannelDAT(gen))
 
     def apply()(implicit p: Parameters) = Flipped(new CHIChannelDAT(new CHIBundleDAT))
 }

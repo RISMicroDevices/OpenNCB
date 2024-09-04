@@ -8,7 +8,7 @@ import cn.rismd.openncb.chi.bundle._
 /*
 * CHI Channel.
 */
-class CHIChannel[+T <: AbstractCHIBundle](gen: T)(implicit p: Parameters) extends AbstractCHIChannel {
+class CHIChannel[+T <: AbstractCHIBundle](gen: T) extends AbstractCHIChannel {
 
     // xFLITPEND    : Flit Pending.
     val flitpend    = Output(Bool())
@@ -30,10 +30,10 @@ class CHIChannel[+T <: AbstractCHIBundle](gen: T)(implicit p: Parameters) extend
 
 // TX CHI Channel
 object CHIChannelTX {
-    def apply[T <: AbstractCHIBundle](gen: T)(implicit p: Parameters) = new CHIChannel(gen)
+    def apply[T <: AbstractCHIBundle](gen: T) = new CHIChannel(gen)
 }
 
 // RX CHI Channel
 object CHIChannelRX {
-    def apply[T <: AbstractCHIBundle](gen: T)(implicit p: Parameters) = Flipped(new CHIChannel(gen))
+    def apply[T <: AbstractCHIBundle](gen: T) = Flipped(new CHIChannel(gen))
 }

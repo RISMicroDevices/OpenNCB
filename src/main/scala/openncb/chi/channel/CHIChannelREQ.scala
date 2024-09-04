@@ -8,13 +8,13 @@ import cn.rismd.openncb.chi.bundle._
 /*
 * CHI REQ Channel.
 */
-class CHIChannelREQ[+T <: CHIBundleREQ](gen: T)(implicit p: Parameters) extends CHIChannel[T](gen)
+class CHIChannelREQ[+T <: CHIBundleREQ](gen: T) extends CHIChannel[T](gen)
 
 
 // TXREQ Channel.
 object CHIChannelTXREQ {
 
-    def apply[T <: CHIBundleREQ](gen: T)(implicit p: Parameters) = new CHIChannelREQ(gen)
+    def apply[T <: CHIBundleREQ](gen: T) = new CHIChannelREQ(gen)
 
     def apply()(implicit p: Parameters) = new CHIChannelREQ(new CHIBundleREQ)
 }
@@ -22,7 +22,7 @@ object CHIChannelTXREQ {
 // RXREQ Channel.
 object CHIChannelRXREQ {
 
-    def apply[T <: CHIBundleREQ](gen: T)(implicit p: Parameters) = Flipped(new CHIChannelREQ(gen))
+    def apply[T <: CHIBundleREQ](gen: T) = Flipped(new CHIChannelREQ(gen))
 
     def apply()(implicit p: Parameters) = Flipped(new CHIChannelREQ(new CHIBundleREQ))
 }
