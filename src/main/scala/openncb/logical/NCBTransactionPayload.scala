@@ -213,7 +213,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
 
     // Status Payload - Upstream (CHI to AXI) Valid Registers
-    val regUpstreamValid    = RegInit(Vec(paramPayloadCapacity, Vec(paramUpstreamMaxBeatCount, Bool())), 
+    protected val regUpstreamValid  = RegInit(Vec(paramPayloadCapacity, Vec(paramUpstreamMaxBeatCount, Bool())), 
         init = VecInit.fill(paramPayloadCapacity, paramUpstreamMaxBeatCount)(false.B))
 
     (0 until paramPayloadCapacity).foreach(i => {
@@ -230,7 +230,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     })
 
     // Status Payload - Downstream (AXI to CHI) Valid Registers
-    val regDownstreamValid  = RegInit(Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool())), 
+    protected val regDownstreamValid    = RegInit(Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool())), 
         init = VecInit.fill(paramPayloadCapacity, paramDownstreamMaxBeatCount)(false.B))
 
     (0 until paramPayloadCapacity).foreach(i => {
@@ -248,7 +248,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
 
     // Data Payload - Data Registers
-    val regData = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotDataCount, UInt(paramPayloadSlotDataWidth.W))))
+    protected val regData   = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotDataCount, UInt(paramPayloadSlotDataWidth.W))))
 
     (0 until paramPayloadCapacity).foreach(i => {
 
@@ -284,7 +284,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     
 
     // Data Payload - Mask Registers
-    val regMask = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotMaskCount, UInt(paramPayloadSlotMaskWidth.W))))
+    protected val regMask   = Reg(Vec(paramPayloadCapacity, Vec(paramPayloadSlotMaskCount, UInt(paramPayloadSlotMaskWidth.W))))
 
     (0 until paramPayloadCapacity).foreach(i => {
         (0 until paramUpstreamMaxBeatCount).foreach(j => {
@@ -303,19 +303,19 @@ class NCBTransactionPayload(implicit val p: Parameters)
     })
 
     // read concation and connections for payload data and mask registers
-    val wireDataVecUpstream     = Wire(Vec(paramPayloadCapacity, 
+    protected val wireDataVecUpstream   = Wire(Vec(paramPayloadCapacity, 
         Vec(paramUpstreamMaxBeatCount, UInt(paramUpstreamDataWidth.W))))
 
-    val wireDataVecDownstream   = Wire(Vec(paramPayloadCapacity,
+    protected val wireDataVecDownstream = Wire(Vec(paramPayloadCapacity,
         Vec(paramDownstreamMaxBeatCount, UInt(paramDownstreamDataWidth.W))))
 
-    val wireMaskVecUpstream     = Wire(Vec(paramPayloadCapacity,
+    protected val wireMaskVecUpstream   = Wire(Vec(paramPayloadCapacity,
         Vec(paramUpstreamMaxBeatCount, UInt(paramUpstreamMaskWidth.W))))
 
-    val wireMaskVecDownstream   = Wire(Vec(paramPayloadCapacity,
+    protected val wireMaskVecDownstream = Wire(Vec(paramPayloadCapacity,
         Vec(paramDownstreamMaxBeatCount, UInt(paramDownstreamMaskWidth.W))))
 
-    val funcCat = (i: Int, j: Int, k: Int, t: (Vec[Vec[UInt]], Vec[Vec[UInt]])) => {
+    protected val funcCat = (i: Int, j: Int, k: Int, t: (Vec[Vec[UInt]], Vec[Vec[UInt]])) => {
         t._1(i)(j) := Cat((0 until k).map(l => {
             t._2(i)(j * k + l)
         }).reverse)
@@ -423,7 +423,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
 
 
     // Debug Info - Transaction Allocation Table
-    val regTransactionTable = RegInit(new Bundle {
+    protected val regTransactionTable   = RegInit(new Bundle {
         val valid       = Vec(paramPayloadCapacity, Bool())
         val upload      = Vec(paramPayloadCapacity, Bool())
     }.Lit(
