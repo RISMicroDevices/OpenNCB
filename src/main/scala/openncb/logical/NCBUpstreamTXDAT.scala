@@ -1,18 +1,20 @@
 package cn.rismd.openncb.logical
 
 import chisel3._
+import chisel3.util.OHToUInt
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.debug.CompanionConnection
-import cn.rismd.openncb.chi.WithCHIParameters
 import cn.rismd.openncb.WithNCBParameters
+import cn.rismd.openncb.chi.WithCHIParameters
+import cn.rismd.openncb.chi.CHIConstants
 import cn.rismd.openncb.chi.opcode.CHISNFOpcodesDAT
 import cn.rismd.openncb.chi.channel.CHIChannelTXDAT
 import cn.rismd.openncb.logical.chi.CHILinkActiveManagerTX
 import cn.rismd.openncb.logical.chi.CHILinkCreditManagerTX
-import cn.rismd.openncb.chi.CHIConstants
 import cn.rismd.openncb.util.ValidMux
-import chisel3.util.OHToUInt
+import cn.rismd.openncb.debug.CompanionConnection
+import cn.rismd.openncb.debug.DebugBundle
+import cn.rismd.openncb.debug.DebugSignal
 
 
 /*
@@ -223,4 +225,19 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
         regTXDATFlitPend.flit.BE            .get := 0.U
         regTXDATFlitPend.flit.Data          .get := io.queuePayloadRead.data
     }
+
+
+    // assertions & debugs
+    /*
+    * Port I/O: Debug
+    */
+    class DebugPort extends DebugBundle {
+        // submodule
+        val linkCredit                      = chiselTypeOf(uLinkCredit.debug)
+    }
+
+    @DebugSignal
+    val debug   = IO(new DebugPort)
+
+    debug.linkCredit <> uLinkCredit.debug
 }
