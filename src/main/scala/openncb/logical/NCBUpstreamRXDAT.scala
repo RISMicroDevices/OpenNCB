@@ -140,7 +140,7 @@ class NCBUpstreamRXDAT(val uLinkActiveManager       : CHILinkActiveManagerRX,
     //  ------------------------
         NonCopyBackWrData
     //  ========================
-    )))
+    ), true))
 
     uDecoder.io.valid   := regRXDAT.flitv
     uDecoder.io.opcode  := regRXDAT.flit.Opcode.get
@@ -181,6 +181,9 @@ class NCBUpstreamRXDAT(val uLinkActiveManager       : CHILinkActiveManagerRX,
     // transaction queue update
     io.queueUpstream.cancel.en      := logicTransactionCancel
     io.queueUpstream.cancel.strb    := logicTxnIDToStrb
+
+    io.queueUpstream.writeData.en   := logicTransactionData
+    io.queueUpstream.writeData.strb := logicTxnIDToStrb
 
     // transaction queue query (for debug)
     io.queueUpstream.query.en       := regRXDAT.flitv
