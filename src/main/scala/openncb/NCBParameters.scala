@@ -177,6 +177,8 @@ case class NCBParameters (
     * axiConstantAWQoSValue: Specify the fixed value of AXI write channel QoS
     *                        when {@code axiConstantAWQoS} set to {@value true}.
     * 
+    * * By default, {@code axiConstantAWQosValue} is set to {@value 0}.
+    * 
     * * When {@code axiConstantAWQoS} was set to {@value true}, on the AXI4 write channel
     *   side, the output value of 'AWQOS' was always tied to {@code axiConstantAWQoSValue}.
     */
@@ -186,13 +188,36 @@ case class NCBParameters (
     * axiAWBufferable: Configure whether the AXI write channel Cache Attribute
     *                  was set with Bufferable attribute.
     * 
+    * * By default, {@code axiAWBufferable} is set to {@value false}.
+    * 
     * * When {@code axiAWBufferable} was set to {@value true}, on the AXI4 write channel
     *   side, the output value of 'AWCACHE' was always tied to {@value 0b0011}, indicating
     *   Normal Non-cacheable Bufferable Memory.
     *   Otherwise, the 'AWCACHE' was tied to {@value 0b0010}, indicating
     *   Normal Non-cacheable Non-bufferable Memory.
     */
-    axiAWBufferable             : Boolean               = false
+    axiAWBufferable             : Boolean               = false,
+
+    /*
+    * axiAWAfterFirstData: Configure whether the downstream AXI write address (AW) channel
+    *                      transactions were only sent after upstream CHI channel had 
+    *                      received first write back data or cancel.
+    * 
+    * * By default, {@code axiAWAfterFirstData} is set to {@value false}.
+    * 
+    * * Might be useful for AXI data write bandwidth control. Since the write interleaving
+    *   support was removed in AXI-4, the order of data transmission was determined by the
+    *   order of write address channel sequence:
+    *   In some circumstances or system designs, data might arrive in a long time after 
+    *   the arrival of CHI write request in RXREQ, occupying the in-order write issuing
+    *   channel, leading to inability of sending later write transactions with data ready.
+    *   On the other side, with {@code axiAWAfterFirstData} enabled, this would result 
+    *   in a slightly longer transaction completion time, and losing some overall optimization
+    *   through early write address requests.
+    *   (e.g. in some DDR controllers, early write address could be performed as a prefetch
+    *         or a earlier pre-charge triggering hint)
+    */
+    axiAWAfterFirstData         : Boolean               = false
 ) {
 
     require(outstandingDepth >= 1 && outstandingDepth <= 15, 
