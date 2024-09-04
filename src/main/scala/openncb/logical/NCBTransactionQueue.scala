@@ -61,7 +61,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
     class TransactionOpCHIComp extends Bundle with TraitTransactionOpElement {
         val barrier         = new Bundle {
-            val CHICancelOrAXIBresp = Input(Bool())
+            val CHICancelOrAXIBresp = Bool()
         }
 
         override def ready: Bool = valid & !barrier.asUInt.orR
@@ -73,7 +73,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
     class TransactionOpCHIReadReceipt extends Bundle with TraitTransactionOpElement {
         val barrier         = new Bundle {
-            val AXIARready      = Bool()
+            val AXIARready          = Bool()
         }
 
         override def ready: Bool = valid & !barrier.asUInt.orR
@@ -83,7 +83,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
     class TransactionOpAXIWriteAddress extends Bundle with TraitTransactionOpElement {
         val barrier         = new Bundle {
-            val CHIWriteBackData    = Input(Bool())
+            val CHIWriteBackData    = Bool()
         }
 
         override def ready: Bool = valid & !barrier.asUInt.orR
@@ -253,6 +253,14 @@ class NCBTransactionQueue(implicit val p: Parameters)
         val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
     }
 
+    /* 
+    * Port I/O: Upstream Write Data Update (for RXDAT)
+    */
+    class UpstreamWriteDataPort extends Bundle {
+        val en              = Input(Bool())
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
     /*
     * Port I/O: Upstream RSP Op Valid (for TXRSP)
     */
@@ -368,6 +376,9 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
             // cancel port
             val cancel                  = new UpstreamCancelPort
+
+            // write data port
+            val writeData               = new UpstreamWriteDataPort
         }
 
         // upstream ports (for TXRSP)
@@ -405,13 +416,25 @@ class NCBTransactionQueue(implicit val p: Parameters)
             // operand read port
             val operandRead             = new UpstreamDatOperandReadPort
         }
+
+        // downstream ports (for AXI AW)
+        val downstreamAw            = new Bundle {
+            // op valid port
+            val opValid                 = new DownstreamAWOpValidPort
+
+            // op done port
+            val opDone                  = new DownstreamAWOpDonePort
+
+            // operand read port
+            val operandRead             = new DownstreamAWOperandReadPort
+        }
     })
 
 
     /*
     * Transaction Queue Registers
     */
-    val regQueue    = RegInit(init = VecInit(Seq.fill(paramQueueCapacity){
+    protected val regQueue  = RegInit(init = VecInit(Seq.fill(paramQueueCapacity){
         val resetValue  = Wire(new Bundle {
             val valid       = Output(Bool())
             val bits        = Output(new QueueEntry)
@@ -438,7 +461,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
     }})
 
     // entry free logic
-    val logicEntryFree  = regQueue.map({ entry => {
+    protected val logicEntryFree    = regQueue.map({ entry => {
         entry.valid & !entry.bits.op.chi.valid & !entry.bits.op.axi.valid
     }})
 
@@ -462,11 +485,31 @@ class NCBTransactionQueue(implicit val p: Parameters)
         }
     }})
 
-    // barrier logic: Op.Comp.CHICancelOrAXIBresp
+    // barrier logic: CHI.Op.Comp.CHICancelOrAXIBresp
     regQueue.zipWithIndex.foreach({ case (entry, i) => {
 
+        // on CHI WriteDataCancel
         when (io.upstreamRxDat.cancel.en & io.upstreamRxDat.cancel.strb(i)) {
+            // clear CHI domain barriers
             entry.bits.op.chi.Comp.barrier.CHICancelOrAXIBresp  := false.B
+
+            // clear AXI domain write tasks
+            entry.bits.op.axi.WriteAddress  := false.B
+            entry.bits.op.axi.WriteData     := false.B
+            entry.bits.op.axi.WriteResponse := false.B
+        }
+
+        // on AXI BRESP
+        // TODO
+    }})
+
+    // barrier logic: AXI.Op.WriteAddress.CHIWriteBackData
+    regQueue.zipWithIndex.foreach({ case (entry, i) => {
+    
+        // on CHI NonCopyBackWrData
+        when (io.upstreamRxDat.writeData.en & io.upstreamRxDat.writeData.strb(i)) {
+            // clear AXI domain barriers
+            entry.bits.op.axi.WriteAddress.barrier.CHIWriteBackData := false.B
         }
     }})
 
