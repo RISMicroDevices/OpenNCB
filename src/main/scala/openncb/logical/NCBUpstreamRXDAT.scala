@@ -145,11 +145,11 @@ class NCBUpstreamRXDAT(val uLinkActiveManager       : CHILinkActiveManagerRX,
     uDecoder.io.valid   := regRXDAT.flitv
     uDecoder.io.opcode  := regRXDAT.flit.Opcode.get
 
-    val logicTransactionData    = uDecoder.is(NonCopyBackWrData)
-    val logicTransactionCancel  = uDecoder.is(WriteDataCancel)
-    val logicLCrdReturn         = uDecoder.is(DataLCrdReturn)
+    protected val logicTransactionData      = uDecoder.is(NonCopyBackWrData)
+    protected val logicTransactionCancel    = uDecoder.is(WriteDataCancel)
+    protected val logicLCrdReturn           = uDecoder.is(DataLCrdReturn)
 
-    val logicTxnIDToStrb        = VecInit(
+    protected val logicTxnIDToStrb          = VecInit(
         UIntToOH(regRXDAT.flit.TxnID.get, paramNCB.outstandingDepth).asBools)
 
     

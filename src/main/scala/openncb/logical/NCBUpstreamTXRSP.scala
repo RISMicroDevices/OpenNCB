@@ -135,7 +135,7 @@ class NCBUpstreamTXRSP(val uLinkActiveManager       : CHILinkActiveManagerTX,
     io.ageSelect.in := io.queueUpstream.opValid.valid
 
     // transaction go op selection
-    val logicOpDoneSelect   = Wire(chiselTypeOf(io.queueUpstream.opDone.bits))
+    protected val logicOpDoneSelect = Wire(chiselTypeOf(io.queueUpstream.opDone.bits))
 
     logicOpDoneSelect.Comp          := false.B
     logicOpDoneSelect.DBIDResp      := false.B
@@ -164,7 +164,7 @@ class NCBUpstreamTXRSP(val uLinkActiveManager       : CHILinkActiveManagerTX,
     io.queueUpstream.opDone.bits    := logicOpDoneSelect
 
     // transaction go flit
-    val logicOpDoneValid    = ValidMux(uLinkCredit.io.linkCreditAvailable, 
+    protected val logicOpDoneValid  = ValidMux(uLinkCredit.io.linkCreditAvailable, 
         io.queueUpstream.opValid.valid.asUInt.orR)
 
     regTXRSPFlitPend.flitv      := logicOpDoneValid

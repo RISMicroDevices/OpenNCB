@@ -145,7 +145,7 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
 
     
     // transaction valid to select
-    val logicOpCompDataReady    = VecInit(
+    protected val logicOpCompDataReady  = VecInit(
         io.queueUpstream.opValid.valid.zipWithIndex.map({ case (valid, i) => {
             valid & VecInit((0 until paramMaxBeatCount).map(j => {
                 io.queueUpstream.opValid.valid(i) &&
@@ -158,7 +158,7 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
     io.ageSelect.in := logicOpCompDataReady
 
     // transaction go op selection
-    val logicOpDoneSelect   = Wire(chiselTypeOf(io.queueUpstream.opDone.bits))
+    protected val logicOpDoneSelect = Wire(chiselTypeOf(io.queueUpstream.opDone.bits))
 
     logicOpDoneSelect.CompData  := false.B
 
@@ -179,7 +179,7 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
     io.queuePayloadRead.index   := io.queueUpstream.operandRead.bits.Critical
 
     // transaction go flit
-    val logicOpDoneValid    = ValidMux(uLinkCredit.io.linkCreditAvailable,
+    protected val logicOpDoneValid    = ValidMux(uLinkCredit.io.linkCreditAvailable,
         io.ageSelect.out.asUInt.orR)
 
     regTXDATFlitPend.flitv      := logicOpDoneValid

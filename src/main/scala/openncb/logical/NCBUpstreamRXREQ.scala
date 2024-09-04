@@ -257,7 +257,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     uLinkCredit.io.linkState    := io.linkState
 
     // on Transaction Queue entry free
-    val uLinkCreditProvideBuffer = uLinkCredit.attachLinkCreditProvideBuffer()
+    protected val uLinkCreditProvideBuffer  = uLinkCredit.attachLinkCreditProvideBuffer()
     uLinkCreditProvideBuffer.io.linkCreditProvide := {
         
         val regFreePopCount     = RegInit(
@@ -303,9 +303,9 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     uDecoder.io.valid   := regRXREQ.flitv
     uDecoder.io.opcode  := regRXREQ.flit.Opcode.get
 
-    val logicTransactionRead    = uDecoder.is(ReadNoSnp)
-    val logicTransactionWrite   = uDecoder.is(WriteNoSnpPtl, WriteNoSnpFull)
-    val logicLCrdReturn         = uDecoder.is(ReqLCrdReturn)
+    protected val logicTransactionRead  = uDecoder.is(ReadNoSnp)
+    protected val logicTransactionWrite = uDecoder.is(WriteNoSnpPtl, WriteNoSnpFull)
+    protected val logicLCrdReturn       = uDecoder.is(ReqLCrdReturn)
 
 
     // link credit consume on flit valid
