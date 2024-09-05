@@ -149,7 +149,7 @@ class NCBDownstreamR(val uTransactionQueue      : NCBTransactionQueue,
     }
 
     // axi operand update
-    io.queue.operandAXIWrite.strb           := logicValidNotLast
+    io.queue.operandAXIWrite.strb           := ValidMux(logicValidNotLast, logicRIdOH)
     io.queue.operandAXIWrite.bits.Critical  := VecInit(
         io.queue.operandRead.bits.Critical.asUInt.rotateLeft(1).asBools
     )
