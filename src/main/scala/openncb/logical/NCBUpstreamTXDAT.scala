@@ -46,11 +46,11 @@ object NCBUpstreamTXDAT {
         u.io.ageSelect <> uTransactionAgeMatrix.io.selectTXDAT
 
         // companion connection: NCBTransactionQueue
-        u.io.queueUpstream <> uTransactionQueue.io.upstreamTxDat
+        u.io.queue <> uTransactionQueue.io.upstreamTxDat
 
         // companion connection: NCBTransactionPayload
-        u.io.queuePayloadRead   <> uTransactionPayload.io.upstream.r
-        u.io.queuePayloadValid  <> uTransactionPayload.io.upstream.valid
+        u.io.payloadRead    <> uTransactionPayload.io.upstream.r
+        u.io.payloadValid   <> uTransactionPayload.io.upstream.valid
         
         u
     }
@@ -90,14 +90,14 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
 
         // from NCBTransactionQueue
         @CompanionConnection
-        val queueUpstream           = Flipped(chiselTypeOf(uTransactionQueue.io.upstreamTxDat))
+        val queue                   = Flipped(chiselTypeOf(uTransactionQueue.io.upstreamTxDat))
 
         // from NCBTransactionPayload
         @CompanionConnection
-        val queuePayloadRead        = Flipped(chiselTypeOf(uTransactionPayload.io.upstream.r))
+        val payloadRead             = Flipped(chiselTypeOf(uTransactionPayload.io.upstream.r))
         
         @CompanionConnection
-        val queuePayloadValid       = Flipped(chiselTypeOf(uTransactionPayload.io.upstream.valid))
+        val payloadValid            = Flipped(chiselTypeOf(uTransactionPayload.io.upstream.valid))
     })
 
 
@@ -148,11 +148,11 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
     
     // transaction valid to select
     protected val logicOpCompDataReady  = VecInit(
-        io.queueUpstream.opValid.valid.zipWithIndex.map({ case (valid, i) => {
+        io.queue.opValid.valid.zipWithIndex.map({ case (valid, i) => {
             valid & VecInit((0 until paramMaxBeatCount).map(j => {
-                io.queueUpstream.opValid.valid(i) &&
-                io.queueUpstream.opValid.bits.Critical(i)(j) &&
-                io.queuePayloadValid(i)(j)
+                io.queue.opValid.valid(i) &&
+                io.queue.opValid.bits.Critical(i)(j) &&
+                io.payloadValid(i)(j)
             })).asUInt.orR
         }})
     )
@@ -160,70 +160,81 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
     io.ageSelect.in := logicOpCompDataReady
 
     // transaction go op selection
-    protected val logicOpDoneSelect = Wire(chiselTypeOf(io.queueUpstream.opDone.bits))
-
-    logicOpDoneSelect.CompData  := false.B
-
-    when (io.queueUpstream.opRead.bits.CompData.valid) {
-        logicOpDoneSelect.CompData  := true.B
-    }
-
-    // transaction go
-    io.queueUpstream.opRead     .strb := io.ageSelect.out
-    io.queueUpstream.infoRead   .strb := io.ageSelect.out
-    io.queueUpstream.operandRead.strb := io.ageSelect.out
-
-    io.queueUpstream.opDone.strb    := ValidMux(uLinkCredit.io.linkCreditAvailable, io.ageSelect.out)
-    io.queueUpstream.opDone.bits    := logicOpDoneSelect
-
-    io.queuePayloadRead.en      := logicOpDoneSelect.asUInt.orR
-    io.queuePayloadRead.strb    := io.ageSelect.out
-    io.queuePayloadRead.index   := io.queueUpstream.operandRead.bits.Critical
-
-    // transaction go flit
     protected val logicOpDoneValid    = ValidMux(uLinkCredit.io.linkCreditAvailable,
         io.ageSelect.out.asUInt.orR)
 
+    protected val logicOpDoneSelect = Wire(chiselTypeOf(io.queue.opDone.bits))
+
+    logicOpDoneSelect.CompData  := false.B
+
+    when (io.queue.opRead.bits.CompData.valid) {
+        logicOpDoneSelect.CompData  := io.queue.operandRead.bits.Count === 0.U
+    }
+
+    // transaction go
+    val logicSelectedGo = ValidMux(uLinkCredit.io.linkCreditAvailable, io.ageSelect.out)
+
+    io.queue.opRead     .strb   := io.ageSelect.out
+    io.queue.infoRead   .strb   := io.ageSelect.out
+    io.queue.operandRead.strb   := io.ageSelect.out
+
+    io.queue.opDone.strb    := logicSelectedGo
+    io.queue.opDone.bits    := logicOpDoneSelect
+
+    // transaction payload read
+    io.payloadRead.en       := logicOpDoneValid
+    io.payloadRead.strb     := io.ageSelect.out
+    io.payloadRead.index    := io.queue.operandRead.bits.Critical
+
+    // transaction operand update
+    io.queue.operandWrite.strb          := logicSelectedGo
+    io.queue.operandWrite.bits.Critical := VecInit(
+        io.queue.operandRead.bits.Critical.asUInt.rotateLeft(1).asBools
+    )
+    io.queue.operandWrite.bits.Count    :=
+        io.queue.operandRead.bits.Count - 1.U
+
+    // transaction go flit
     regTXDATFlitPend.flitv      := logicOpDoneValid
     when (logicOpDoneValid) {
 
-        regTXDATFlitPend.flit.QoS           .get := io.queueUpstream.infoRead.bits.QoS
+        regTXDATFlitPend.flit.QoS           .get := io.queue.infoRead.bits.QoS
         regTXDATFlitPend.flit.TgtID         .get := {
             if (paramNCB.readCompDMT)
-                io.queueUpstream.infoRead.bits.ReturnNID
+                io.queue.infoRead.bits.ReturnNID
             else
-                io.queueUpstream.infoRead.bits.SrcID
+                io.queue.infoRead.bits.SrcID
         }
-        regTXDATFlitPend.flit.SrcID         .get := io.queueUpstream.infoRead.bits.TgtID
+        regTXDATFlitPend.flit.SrcID         .get := io.queue.infoRead.bits.TgtID
         regTXDATFlitPend.flit.TxnID         .get := {
             if (paramNCB.readCompDMT)
-                io.queueUpstream.infoRead.bits.ReturnTxnID
+                io.queue.infoRead.bits.ReturnTxnID
             else
-                io.queueUpstream.infoRead.bits.TxnID
+                io.queue.infoRead.bits.TxnID
         }
         regTXDATFlitPend.flit.HomeNID       .get := {
             if (paramNCB.readCompDMT)
-                io.queueUpstream.infoRead.bits.SrcID
+                io.queue.infoRead.bits.SrcID
             else
                 paramNCB.readCompHomeNID.U
         }
         regTXDATFlitPend.flit.Opcode        .get := CompData.U
-        regTXDATFlitPend.flit.RespErr       .get := io.queueUpstream.operandRead.bits.ReadRespErr
+        regTXDATFlitPend.flit.RespErr       .get := io.queue.operandRead.bits.ReadRespErr
         regTXDATFlitPend.flit.Resp          .get := 0.U
         regTXDATFlitPend.flit.FwdState      (0.U)
         regTXDATFlitPend.flit.DataPull      (0.U)
         regTXDATFlitPend.flit.DataSource    (0.U) 
         regTXDATFlitPend.flit.DBID          .get := {
             if (paramNCB.readCompDMT)
-                io.queueUpstream.infoRead.bits.TxnID
+                io.queue.infoRead.bits.TxnID
             else
                 0.U
         }
-        regTXDATFlitPend.flit.CCID          .get := io.queueUpstream.operandRead.bits.Addr(5, 4)
-        regTXDATFlitPend.flit.DataID        .get := OHToUInt(io.queueUpstream.operandRead.bits.Critical)
+        regTXDATFlitPend.flit.CCID          .get := io.queue.operandRead.bits.Addr(5, 4)
+        regTXDATFlitPend.flit.DataID        .get := OHToUInt(io.queue.operandRead.bits.Critical)
         regTXDATFlitPend.flit.TraceTag      .get := 0.U
         regTXDATFlitPend.flit.BE            .get := 0.U
-        regTXDATFlitPend.flit.Data          .get := io.queuePayloadRead.data
+        regTXDATFlitPend.flit.Data          .get := io.payloadRead.data
     }
 
 
