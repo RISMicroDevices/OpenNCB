@@ -63,6 +63,12 @@ class NCBTransactionAgeMatrix(implicit val p: Parameters)
 
         // selection port for TXDAT
         val selectTXDAT = new SelectPort
+
+        // selection port for AW
+        val selectAW    = new SelectPort
+
+        // selection port for AR
+        val selectAR    = new SelectPort
     })
 
 
@@ -102,7 +108,9 @@ class NCBTransactionAgeMatrix(implicit val p: Parameters)
     // selection logic
     Seq(
         io.selectTXRSP,
-        io.selectTXDAT
+        io.selectTXDAT,
+        io.selectAW,
+        io.selectAR
     ).foreach (select => {
         select.out := VecInit((0 until paramNCB.outstandingDepth).map(i => {
             (VecInit((0 until paramNCB.outstandingDepth)
