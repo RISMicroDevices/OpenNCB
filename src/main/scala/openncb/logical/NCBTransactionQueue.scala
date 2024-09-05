@@ -14,8 +14,6 @@ import cn.rismd.openncb.util.ParallelMux
 import cn.rismd.openncb.debug.DebugBundle
 import cn.rismd.openncb.debug.DebugSignal
 import cn.rismd.openncb.util.ValidMux
-import freechips.rocketchip.util.DataToAugmentedData
-import freechips.rocketchip.util.SeqToAugmentedSeq
 
 
 /*
@@ -358,6 +356,177 @@ class NCBTransactionQueue(implicit val p: Parameters)
         val bits            = Output(new TransactionOperandCHI)
     }
 
+    /*
+    * Port I/O: Upstream DAT Operand Write (for TXDAT)
+    */
+    class UpstreamDatOperandWritePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = new Bundle {
+            val Critical        = Input(Vec(paramUpstreamMaxBeatCount, Bool()))
+            val Count           = Input(UInt(paramUpstreamMaxBeatCountWidth.W))
+        }
+    }
+
+    /*
+    * Port I/O: Downstream AW Op Valid Read 
+    */
+    class DownstreamAWOpValidPort extends Bundle {
+        val valid           = Output(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AW Op Point of No Return
+    */
+    class DownstreamAWOpPoNRPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AW Op Done
+    */
+    class DownstreamAWOpDonePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AW Info Read 
+    */
+    class DownstreamAWInfoReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionInfo)
+    }
+
+    /*
+    * Port I/O: Downstream AW Operand Read 
+    */
+    class DownstreamAWOperandReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionOperandAXI)
+    }
+
+    /*
+    * Port I/O: Downstream W Op Point of No Return
+    */
+    class DownstreamWOpPoNRPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream W Op Done
+    */
+    class DownstreamWOpDonePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream W Operand Read 
+    */
+    class DownstreamWOperandReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionOperandAXI)
+    }
+
+    /*
+    * Port I/O: Downstream W Operand Write
+    */
+    class DownstreamWOperandWritePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = new Bundle {
+            val Critical        = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
+            val Count           = Input(UInt(paramDownstreamMaxBeatCountWidth.W))
+        }
+    }
+
+    /*
+    * Port I/O: Downstream B Op Done 
+    */
+    class DownstreamBOpDonePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream B Operand Write 
+    */
+    class DownstreamBOperandWritePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = new Bundle {
+            val WriteRespErr    = Input(UInt(paramCHI.rspRespErrWidth.W))
+        }
+    }
+
+    /*
+    * Port I/O: Downstream AR Op Valid 
+    */
+    class DownstreamAROpValidPort extends Bundle {
+        val valid           = Output(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AR Op Point of No Return
+    */
+    class DownstreamAROpPoNRPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AR Op Done
+    */
+    class DownstreamAROpDonePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream AR Info Read 
+    */
+    class DownstreamARInfoReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionInfo)
+    }
+
+    /*
+    * Port I/O: Downstream AR Operand Read 
+    */
+    class DownstreamAROperandReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionOperandAXI)
+    }
+
+    /*
+    * Port I/O: Downstream R Op Done
+    */
+    class DownstreamROpDonePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+    }
+
+    /*
+    * Port I/O: Downstream R Operand Read 
+    */
+    class DownstreamROperandReadPort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = Output(new TransactionOperandAXI)
+    }
+
+    /*
+    * Port I/O: Downstream R Operand AXI Write
+    */
+    class DownstreamROperandAXIWritePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = new Bundle {
+            val Critical        = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
+            val Count           = Input(UInt(paramDownstreamMaxBeatCountWidth.W))
+        }
+    }
+    
+    /*
+    * Port I/O: Downstream R Operand CHI Write
+    */
+    class DownstreamROperandCHIWritePort extends Bundle {
+        val strb            = Input(Vec(paramNCB.outstandingDepth, Bool()))
+        val bits            = new Bundle {
+            val ReadRespErr     = Input(UInt(paramCHI.datRespErrWidth.W))
+        }
+    }
+
 
     /*
     * Module I/O 
@@ -371,62 +540,68 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
         // upstream ports (for RXDAT)
         val upstreamRxDat           = new Bundle {
-            // query port
             val query                   = new UpstreamQueryPort
-
-            // cancel port
             val cancel                  = new UpstreamCancelPort
-
-            // write data port
             val writeData               = new UpstreamWriteDataPort
         }
 
         // upstream ports (for TXRSP)
         val upstreamTxRsp           = new Bundle {
-            // op valid port
             val opValid                 = new UpstreamRspOpValidPort
-
-            // op read port
             val opRead                  = new UpstreamRspOpReadPort
-
-            // op done port
             val opDone                  = new UpstreamRspOpDonePort
-
-            // info read port
             val infoRead                = new UpstreamRspInfoReadPort
-
-            // operand read port
             val operandRead             = new UpstreamRspOperandReadPort
         }
         
         // upstream ports (for TXDAT)
         val upstreamTxDat           = new Bundle {
-            // op valid port
             val opValid                 = new UpstreamDatOpValidPort
-
-            // op read port
             val opRead                  = new UpstreamDatOpReadPort
-
-            // op done port
             val opDone                  = new UpstreamDatOpDonePort
-
-            // info read port
             val infoRead                = new UpstreamDatInfoReadPort
-
-            // operand read port
             val operandRead             = new UpstreamDatOperandReadPort
+            val operandWrite            = new UpstreamDatOperandWritePort
         }
 
         // downstream ports (for AXI AW)
         val downstreamAw            = new Bundle {
-            // op valid port
             val opValid                 = new DownstreamAWOpValidPort
-
-            // op done port
+            val opPoNR                  = new DownstreamAWOpPoNRPort
             val opDone                  = new DownstreamAWOpDonePort
-
-            // operand read port
+            val infoRead                = new DownstreamAWInfoReadPort
             val operandRead             = new DownstreamAWOperandReadPort
+        }
+
+        // downstream ports (for AXI W)
+        val downstreamW             = new Bundle {
+            val opPoNR                  = new DownstreamWOpPoNRPort
+            val opDone                  = new DownstreamWOpDonePort
+            val operandRead             = new DownstreamWOperandReadPort
+            val operandWrite            = new DownstreamWOperandWritePort
+        }
+
+        // downstream ports (for AXI B)
+        val downstreamB             = new Bundle {
+            val opDone                  = new DownstreamBOpDonePort
+            val operandWrite            = new DownstreamBOperandWritePort
+        }
+
+        // downstream ports (for AXI AR)
+        val downstreamAr            = new Bundle {
+            val opValid                 = new DownstreamAROpValidPort
+            val opPoNR                  = new DownstreamAROpPoNRPort
+            val opDone                  = new DownstreamAROpDonePort
+            val infoRead                = new DownstreamARInfoReadPort
+            val operandRead             = new DownstreamAROperandReadPort
+        }
+
+        // downstream ports (for AXI R)
+        val downstreamR             = new Bundle {
+            val opDone                  = new DownstreamROpDonePort
+            val operandRead             = new DownstreamROperandReadPort
+            val operandAXIWrite         = new DownstreamROperandAXIWritePort
+            val operandCHIWrite         = new DownstreamROperandCHIWritePort
         }
     })
 
@@ -494,13 +669,26 @@ class NCBTransactionQueue(implicit val p: Parameters)
             entry.bits.op.chi.Comp.barrier.CHICancelOrAXIBresp  := false.B
 
             // clear AXI domain write tasks
-            entry.bits.op.axi.WriteAddress  := false.B
-            entry.bits.op.axi.WriteData     := false.B
-            entry.bits.op.axi.WriteResponse := false.B
+            entry.bits.op.axi.WriteAddress  .valid := false.B
+            entry.bits.op.axi.WriteData     .valid := false.B
+            entry.bits.op.axi.WriteResponse .valid := false.B
         }
 
         // on AXI BRESP
-        // TODO
+        when (io.downstreamB.opDone.strb(i)) {
+            // clear CHI domain barriers
+            entry.bits.op.chi.Comp.barrier.CHICancelOrAXIBresp  := false.B
+        }
+    }})
+
+    // barrier logic: CHI.Op.ReadReceipt.AXIARready
+    regQueue.zipWithIndex.foreach({ case (entry, i) => {
+
+        // on AXI ARREADY
+        when (io.downstreamAr.opDone.strb(i)) {
+            // clear CHI domain barriers
+            entry.bits.op.chi.ReadReceipt.barrier.AXIARready    := false.B
+        }
     }})
 
     // barrier logic: AXI.Op.WriteAddress.CHIWriteBackData
@@ -540,6 +728,20 @@ class NCBTransactionQueue(implicit val p: Parameters)
         critical := entry
     }})
 
+    // AXI AW op valid output logic
+    io.downstreamAw.opValid.valid.zipWithIndex.map({ case (valid, i) => {
+        (valid, regQueue(i).bits.op, regQueue(i).bits.order)
+    }}).foreach({ case (valid, entry, order) => {
+        valid := entry.axi.WriteAddress.ready & !order.valid
+    }})
+
+    // AXI AR op valid output logic
+    io.downstreamAr.opValid.valid.zipWithIndex.map({ case (valid, i) => {
+        (valid, regQueue(i).bits.op, regQueue(i).bits.order)
+    }}).foreach({ case (valid, entry, order) => {
+        valid := entry.axi.ReadAddress.ready & !order.valid
+    }})
+
     // TXRSP op read logic
     io.upstreamTxRsp.opRead.bits := ParallelMux(
         io.upstreamTxRsp.opRead.strb.zipWithIndex.map({ case (strb, i) => {
@@ -570,6 +772,36 @@ class NCBTransactionQueue(implicit val p: Parameters)
             (strb, op)
         }})
     )
+
+    // AXI AW op PoNR logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamAw.opPoNR.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when(strb) {
+            entry.bits.op.axi.WriteAddress      .valid := false.B
+        }
+    }})
+
+    // AXI W op PoNR logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamW.opPoNR.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.op.axi.WriteData         .valid := false.B
+        }
+    }})
+
+    // AXI AR op PoNR logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamAr.opPoNR.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.op.axi.ReadAddress       .valid := false.B
+        }
+    }})
 
     // TXRSP op done logic
     regQueue.zipWithIndex.map({ case (entry, i) => {
@@ -609,6 +841,26 @@ class NCBTransactionQueue(implicit val p: Parameters)
         }
     }})
 
+    // AXI B op done logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamB.opDone.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.op.axi.WriteResponse     .valid := false.B
+        }
+    }})
+
+    // AXI R op done logic
+    regQueue.zipWithIndex.map({ case (entry ,i) => {
+        (entry, io.downstreamR.opDone.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.op.axi.ReadData          .valid := false.B
+        }
+    }})
+
     // TXRSP info read logic
     io.upstreamTxRsp.infoRead.bits  := ParallelMux(
         io.upstreamTxRsp.infoRead.strb.zipWithIndex.map({ case (strb, i) => {
@@ -619,6 +871,20 @@ class NCBTransactionQueue(implicit val p: Parameters)
     // TXDAT info read logic
     io.upstreamTxDat.infoRead.bits  := ParallelMux(
         io.upstreamTxDat.infoRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.info)
+        }})
+    )
+
+    // AXI AW info read logic
+    io.downstreamAw.infoRead.bits   := ParallelMux(
+        io.downstreamAw.infoRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.info)
+        }})
+    )
+
+    // AXI AR info read logic
+    io.downstreamAr.infoRead.bits   := ParallelMux(
+        io.downstreamAr.infoRead.strb.zipWithIndex.map({ case (strb, i) => {
             (strb, regQueue(i).bits.info)
         }})
     )
@@ -636,6 +902,86 @@ class NCBTransactionQueue(implicit val p: Parameters)
             (strb, regQueue(i).bits.operand.chi)
         }})
     )
+
+    // AXI AW operand read logic
+    io.downstreamAw.operandRead.bits    := ParallelMux(
+        io.downstreamAw.operandRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.operand.axi)
+        }})
+    )
+
+    // AXI W operand read logic
+    io.downstreamW.operandRead.bits     := ParallelMux(
+        io.downstreamW.operandRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.operand.axi)
+        }})
+    )
+
+    // AXI AR operand read logic
+    io.downstreamAr.operandRead.bits    := ParallelMux(
+        io.downstreamAr.operandRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.operand.axi)
+        }})
+    )
+
+    // AXI R operand read logic
+    io.downstreamR.operandRead.bits     := ParallelMux(
+        io.downstreamR.operandRead.strb.zipWithIndex.map({ case (strb, i) => {
+            (strb, regQueue(i).bits.operand.axi)
+        }})
+    )
+
+    // TXDAT operand write logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.upstreamTxDat.operandWrite.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.operand.chi.Critical := io.upstreamTxDat.operandWrite.bits.Critical
+            entry.bits.operand.chi.Count    := io.upstreamTxDat.operandWrite.bits.Count
+        }
+    }})
+
+    // AXI W operand write logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamW.operandWrite.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.operand.axi.Critical := io.downstreamW.operandWrite.bits.Critical
+            entry.bits.operand.axi.Count    := io.downstreamW.operandWrite.bits.Count
+        }
+    }})
+
+    // AXI B operand write logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamB.operandWrite.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.operand.chi.WriteRespErr := io.downstreamB.operandWrite.bits.WriteRespErr
+        }
+    }})
+
+    // AXI R operand write logic
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamR.operandAXIWrite.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.operand.axi.Critical     := io.downstreamR.operandAXIWrite.bits.Critical
+            entry.bits.operand.axi.Count        := io.downstreamR.operandAXIWrite.bits.Count
+        }
+    }})
+
+    regQueue.zipWithIndex.map({ case (entry, i) => {
+        (entry, io.downstreamR.operandCHIWrite.strb(i))
+    }}).foreach({ case (entry, strb) => {
+
+        when (strb) {
+            entry.bits.operand.chi.ReadRespErr  := io.downstreamR.operandCHIWrite.bits.ReadRespErr
+        }
+    }})
     /**/
 
 
@@ -659,6 +1005,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
     */
     class DebugPort extends DebugBundle {
         val DoubleAllocation                = Output(Vec(paramQueueCapacity, Bool()))
+        val DanglingAXIWriteResponse        = Output(Vec(paramQueueCapacity, Bool()))
     }
 
     @DebugSignal
@@ -666,11 +1013,22 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
     /*
     * @assertion DoubleAllocation
-    *  One slot in Transaction Queue must only be allocated once util next free.
+    *   One slot in Transaction Queue must only be allocated once util next free.
     */
     (0 until paramQueueCapacity).foreach(i => {
         debug.DoubleAllocation(i) := io.allocate.en && io.allocate.strb(i) && regQueue(i).valid
         assert(!debug.DoubleAllocation(i),
             s"double allocation at [${i}]")
+    })
+
+    /*
+    * @assertion DanglingAXIWriteResponse
+    *   Received Write Response on AXI B channel with no corresponding transaction.
+    */
+    (0 until paramQueueCapacity).foreach(i => {
+        debug.DanglingAXIWriteResponse(i) := io.downstreamB.opDone.strb(i) &&
+            (!regQueue(i).valid || !regQueue(i).bits.op.axi.WriteResponse.valid)
+        assert(!debug.DanglingAXIWriteResponse(i),
+            s"received BRESP for non-exist transaction at [${i}]")
     })
 }
