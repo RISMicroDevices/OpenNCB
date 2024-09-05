@@ -17,7 +17,7 @@ class AXI4BundleW(implicit p: Parameters) extends AbstractAXI4Bundle {
     val strb        = UInt(p(AXI4ParametersKey).strbWidth.W)
 
     // last     [0:0]               : 'WLAST' - Write last.
-    val last        = Bool
+    val last        = Bool()
 
 
     /*

@@ -20,7 +20,7 @@ class AXI4BundleR(implicit p: Parameters) extends AbstractAXI4Bundle {
     val resp        = UInt(2.W)
 
     // last     [0:0]               : 'RLAST' - Read last.
-    val last        = Bool
+    val last        = Bool()
 
 
     /*
