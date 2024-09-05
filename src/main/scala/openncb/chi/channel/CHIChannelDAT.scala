@@ -3,12 +3,17 @@ package cn.rismd.openncb.chi.channel
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi.bundle._
+import cn.rismd.openncb.chi.EnumCHIChannel
 
 
 /*
 * CHI DAT Channel.
 */
-class CHIChannelDAT[+T <: CHIBundleDAT](gen: T) extends CHIChannel[T](gen)
+class CHIChannelDAT[+T <: CHIBundleDAT](gen: T) 
+        extends CHIChannel[T](gen, EnumCHIChannel.DAT)
+
+class CHIRawChannelDAT(gen: UInt) 
+        extends CHIRawChannel(gen, EnumCHIChannel.DAT)
 
 
 // TXDAT Channel.
@@ -25,4 +30,17 @@ object CHIChannelRXDAT {
     def apply[T <: CHIBundleDAT](gen: T) = Flipped(new CHIChannelDAT(gen))
 
     def apply()(implicit p: Parameters) = Flipped(new CHIChannelDAT(new CHIBundleDAT))
+}
+
+
+// Raw TXDAT Channel.
+object CHIRawChannelTXDAT {
+    def apply()(implicit p: Parameters)
+        = new CHIRawChannelDAT(UInt((new CHIBundleDAT).getWidth.W))
+}
+
+// Raw RXDAT Channel.
+object CHIRawChannelRXDAT {
+    def apply()(implicit p: Parameters)
+        = Flipped(new CHIRawChannelDAT(UInt((new CHIBundleDAT).getWidth.W)))
 }

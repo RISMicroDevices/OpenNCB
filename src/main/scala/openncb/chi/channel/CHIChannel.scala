@@ -3,37 +3,48 @@ package cn.rismd.openncb.chi.channel
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
 import cn.rismd.openncb.chi.bundle._
+import cn.rismd.openncb.chi.EnumCHIChannel
 
 
 /*
 * CHI Channel.
 */
-class CHIChannel[+T <: AbstractCHIBundle](gen: T) extends AbstractCHIChannel {
+class CHIChannel[+T <: AbstractCHIBundle](gen: T, channelType: EnumCHIChannel) 
+        extends AbstractCHIChannel[T](gen, channelType)
 
-    // xFLITPEND    : Flit Pending.
-    val flitpend    = Output(Bool())
-
-    // xFLITV       : Flit Valid.
-    val flitv       = Output(Bool())
-
-    // xFLIT        : Flit.
-    val flit        = Output(gen)
-
-    // xLCRDV       : L-Credit Valid.
-    val lcrdv       = Input(Bool())
-
-
-    // utility functions
-    def undirectedChiselType    = Output(chiselTypeOf(this))
-}
+class CHIRawChannel(gen: UInt, channelType: EnumCHIChannel) 
+        extends AbstractCHIChannel[UInt](gen, channelType)
 
 
 // TX CHI Channel
 object CHIChannelTX {
-    def apply[T <: AbstractCHIBundle](gen: T) = new CHIChannel(gen)
+    def apply[T <: AbstractCHIBundle](gen: T, channelType: EnumCHIChannel)
+        = new CHIChannel(gen, channelType)
 }
 
 // RX CHI Channel
 object CHIChannelRX {
-    def apply[T <: AbstractCHIBundle](gen: T) = Flipped(new CHIChannel(gen))
+    def apply[T <: AbstractCHIBundle](gen: T, channelType: EnumCHIChannel)
+        = Flipped(new CHIChannel(gen, channelType))
+}
+
+
+// TX CHI Raw Channel
+object CHIRawChannelTX {
+
+    def apply(channelType: EnumCHIChannel)
+        = new CHIRawChannel(UInt(), channelType)
+
+    def apply(gen: UInt, channelType: EnumCHIChannel)
+        = new CHIRawChannel(gen, channelType)
+}
+
+// RX CHI Raw Channel
+object CHIRawChannelRX {
+
+    def apply(channelType: EnumCHIChannel)
+        = Flipped(new CHIRawChannel(UInt(), channelType))
+
+    def apply(gen: UInt, channelType: EnumCHIChannel)
+        = Flipped(new CHIRawChannel(gen, channelType))
 }
