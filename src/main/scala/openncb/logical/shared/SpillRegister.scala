@@ -11,29 +11,35 @@ object SpillRegister {
 
     def apply[T <: Data](gen: T) = {
         require(!gen.isInstanceOf[DecoupledIO[?]],
-            "use 'attach(...)' instead when passing in DecoupledIO")
+            "use 'applyDecoupled(...)' instead when passing in DecoupledIO")
         Module(new SpillRegister[T, T](gen))
     }
 
-    def apply[T <: DecoupledIO[Data]](in: T, out: T) = {
-        val uSpillRegister = Module(new SpillRegister(out))
+    def applyDecoupled[D <: Data](gen: DecoupledIO[D]) = {
+        Module(new SpillRegister[D, DecoupledIO[D]](gen))
+    }
+
+    def attachDecoupled[D <: DecoupledIO[D]](in: DecoupledIO[D], out: DecoupledIO[D]) = {
+        val uSpillRegister = Module(new SpillRegister(
+            chiselTypeOf(out)
+        ))
         uSpillRegister.io.in    <> in
         uSpillRegister.io.out   <> out
         uSpillRegister
     }
 
-    def attach[D <: Data](gen: DecoupledIO[D]) = {
-        Module(new SpillRegister[D, DecoupledIO[D]](gen))
-    }
-
     def attachIn[T <: DecoupledIO[Data]](in: T): T = {
-        val uSpillRegister = Module(new SpillRegister(in))
+        val uSpillRegister = Module(new SpillRegister(
+            chiselTypeOf(in)
+        ))
         uSpillRegister.io.in    <> in
         uSpillRegister.io.out.asInstanceOf[T]
     }
 
     def attachOut[T <: DecoupledIO[Data]](out: T): T = {
-        val uSpillRegister = Module(new SpillRegister(out))
+        val uSpillRegister = Module(new SpillRegister(
+            chiselTypeOf(out)
+        ))
         uSpillRegister.io.out   <> out
         uSpillRegister.io.in.asInstanceOf[T]
     }
@@ -51,7 +57,7 @@ class SpillRegister[+D <: Data, +T <: Data](gen: T) extends Module {
         // upstream input
         val in              : DecoupledIO[D] = {
             if (gen.isInstanceOf[DecoupledIO[Data]])
-                Flipped(gen.asInstanceOf[DecoupledIO[Data]]).asInstanceOf[DecoupledIO[D]]
+                Flipped(gen.asInstanceOf[Data]).asInstanceOf[DecoupledIO[D]]
             else
                 Flipped(Decoupled(gen)).asInstanceOf[DecoupledIO[D]]
         }
@@ -59,15 +65,15 @@ class SpillRegister[+D <: Data, +T <: Data](gen: T) extends Module {
         // downstream output
         val out             : DecoupledIO[D] = {
             if (gen.isInstanceOf[DecoupledIO[Data]])
-                gen.asInstanceOf[DecoupledIO[Data]].asInstanceOf[DecoupledIO[D]]
+                Flipped(Flipped(gen.asInstanceOf[DecoupledIO[D]]))
             else
-                Decoupled(gen).asInstanceOf[DecoupledIO[D]]
+                Flipped(Flipped(Decoupled(gen).asInstanceOf[DecoupledIO[D]]))
         }
     })
 
     
     //
-    protected def extractDataType: Data   = io.out.bits.getClass().getConstructor().newInstance()
+    protected def extractDataType: Data   = chiselTypeOf(io.out.bits)
 
     
     // Spill Registers
