@@ -13,7 +13,7 @@ val defaultVersions = Map(
   "chisel3" -> "3.6.0",
   "chisel3-plugin" -> "3.6.0",
   "chiseltest" -> "0.6.2",
-  "scala" -> "2.13.10",
+  "scala" -> "2.13.10"
 )
 
 def getVersion(dep: String, org: String = "edu.berkeley.cs", cross: Boolean = false) = {
@@ -77,6 +77,9 @@ object OpenNCB extends SbtModule with HasChisel with millbuild.common.OpenNCBMod
   override def millSourcePath = millOuterCtx.millSourcePath
 
   def rocketModule: ScalaModule = rocketchip
+
+  override def scalacOptions = super.scalacOptions() ++
+    Agg("-deprecation")
 
   object test extends SbtModuleTests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
