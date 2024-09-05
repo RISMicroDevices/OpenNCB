@@ -5,6 +5,9 @@ init:
 compile:
 	mill -i OpenNCB.compile
 
+verilog:
+	mill -i OpenNCB.test.runMain cn.rismd.openncb.NCB200VTop
+
 clean:
 	rm -rf ./build
 
