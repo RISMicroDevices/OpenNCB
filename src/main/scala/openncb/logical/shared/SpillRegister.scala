@@ -9,11 +9,21 @@ import chisel3.util._
 */
 object SpillRegister {
 
+    def apply[T <: Data](gen: T) = {
+        require(!gen.isInstanceOf[DecoupledIO[?]],
+            "use 'attach(...)' instead when passing in DecoupledIO")
+        Module(new SpillRegister[T, T](gen))
+    }
+
     def apply[T <: DecoupledIO[Data]](in: T, out: T) = {
         val uSpillRegister = Module(new SpillRegister(out))
         uSpillRegister.io.in    <> in
         uSpillRegister.io.out   <> out
         uSpillRegister
+    }
+
+    def attach[D <: Data](gen: DecoupledIO[D]) = {
+        Module(new SpillRegister[D, DecoupledIO[D]](gen))
     }
 
     def attachIn[T <: DecoupledIO[Data]](in: T): T = {
@@ -29,7 +39,7 @@ object SpillRegister {
     }
 }
 
-class SpillRegister[+T <: Data](gen: T) extends Module {
+class SpillRegister[+D <: Data, +T <: Data](gen: T) extends Module {
 
     /*
     * Module I/O
@@ -39,19 +49,19 @@ class SpillRegister[+T <: Data](gen: T) extends Module {
     */
     val io = IO(new Bundle {
         // upstream input
-        val in              = {
+        val in              : DecoupledIO[D] = {
             if (gen.isInstanceOf[DecoupledIO[Data]])
-                Flipped(gen.asInstanceOf[DecoupledIO[Data]])
+                Flipped(gen.asInstanceOf[DecoupledIO[Data]]).asInstanceOf[DecoupledIO[D]]
             else
-                Flipped(Decoupled(gen))
+                Flipped(Decoupled(gen)).asInstanceOf[DecoupledIO[D]]
         }
 
         // downstream output
-        val out             = {
+        val out             : DecoupledIO[D] = {
             if (gen.isInstanceOf[DecoupledIO[Data]])
-                gen.asInstanceOf[DecoupledIO[Data]]
+                gen.asInstanceOf[DecoupledIO[Data]].asInstanceOf[DecoupledIO[D]]
             else
-                Decoupled(gen)
+                Decoupled(gen).asInstanceOf[DecoupledIO[D]]
         }
     })
 
@@ -67,7 +77,16 @@ class SpillRegister[+T <: Data](gen: T) extends Module {
     protected val reg2ndValid   = RegInit(init = false.B)
     protected val reg2ndData    = Reg(extractDataType)
 
-    when (io.in.valid & io.in.ready) {
+    when (io.out.ready) {
+
+        when (!reg2ndValid) {
+            reg1stValid := false.B
+        }
+
+        reg2ndValid := false.B
+    }
+
+    when (io.in.fire) {
         reg1stValid := true.B
         reg1stData  := io.in.bits
 
@@ -77,11 +96,7 @@ class SpillRegister[+T <: Data](gen: T) extends Module {
         }
     }
 
-    when (io.out.ready) {
-        reg2ndValid := false.B
-    }
     
-
     // output logic
     io.in.ready     := !reg2ndValid
 
