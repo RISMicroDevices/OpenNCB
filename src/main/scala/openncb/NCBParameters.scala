@@ -135,8 +135,6 @@ case class NCBParameters (
     */
     readCompHomeNID             : Int               = 0,
 
-    // TODO
-
 
     // AXI side - AW channel
     /* 
@@ -185,6 +183,13 @@ case class NCBParameters (
     axiConstantAWQoSValue       : Int                   = 0,
 
     /*
+    * axiAWRegionValue: Configure the REGION field value of AXI AW channel.
+    * 
+    * * By default, {@code axiAWRegionValue} is set to {@value 0}.
+    */
+    axiAWRegionValue            : Int                   = 0,
+
+    /*
     * axiAWBufferable: Configure whether the AXI write channel Cache Attribute
     *                  was set with Bufferable attribute.
     * 
@@ -217,7 +222,75 @@ case class NCBParameters (
     *   (e.g. in some DDR controllers, early write address could be performed as a prefetch
     *         or a earlier pre-charge triggering hint)
     */
-    axiAWAfterFirstData         : Boolean               = false
+    axiAWAfterFirstData         : Boolean               = false,
+
+
+    // AXI side - AR channel
+    /* 
+    * axiConstantARID: Configure whether the AXI4 read channel IDs
+    *                  were set to a constant value.
+    *
+    * * By default, {@code axiConstantARID} is set to {@value false}.
+    *  
+    * * When {@code axiConstantARID} was set to {@value true}, on the AXI4 read channel
+    *   side, the output value of 'ARID' was always tied to {@code axiConstantARIDValue}.
+    *   Otherwise, the 'ARID' was tied to the NCB-Transaction-ID (inner-NCB) of the on-going
+    *   transaction, whose maximum value is decided by the configured outstanding count of
+    *   CHI transactions.
+    */
+    axiConstantARID             : Boolean               = false,
+
+    /*
+    * axiConstantARIDValue: Specify the fixed value of AXI read channel ID
+    *                       when {@code axiConstantARID} set to {@value true}.
+    * *  When {@code axiConstantARID} is set to {@value true}, on the AXI4 read channel
+    *    side, the output value of 'ARID' is always tied to {@code axiConstantARIDValue}.
+    */
+    axiConstantARIDValue        : Int                   = 0,
+
+    /*
+    * axiConstantARQoS: Configure whether the AXI4 read channel QoS
+    *                   was set to a constant value.
+    * 
+    * * By default, {@code axiConstantARQoS} is set to {@value false}.
+    * 
+    * * When {@code axiConstantARQoS} was set to {@value true}, on the AXI4 read channel
+    *   side, the output value of 'ARQOS' was always tied to {@code axiConstantARQoSValue}.
+    *   Otherwise, the 'ARQOS' came from CHI side.
+    */
+    axiConstantARQoS            : Boolean               = false,
+
+    /*
+    * axiConstantARQoSValue: Specify the fixed value of AXI read channel QoS
+    *                        when {@code axiConstantARQoS} set to {@value true}.
+    * 
+    * * By default, {@code axiConstantARQosValue} is set to {@value 0}.
+    * 
+    * * When {@code axiConstantARQoS} was set to {@value true}, on the AXI4 read channel
+    *   side, the output value of 'ARQOS' was always tied to {@code axiConstantARQoSValue}.
+    */
+    axiConstantARQoSValue       : Int                   = 0,
+
+    /*
+    * axiARRegionValue: Configure the REGION field value of AXI AR channel.
+    * 
+    * * By default, {@code axiARRegionValue} is set to {@value 0}.
+    */
+    axiARRegionValue            : Int                   = 0,
+
+    /*
+    * axiARBufferable: Configure whether the AXI read channel Cache Attribute
+    *                  was set with Bufferable attribute.
+    * 
+    * * By default, {@code axiARBufferable} is set to {@value false}.
+    * 
+    * * When {@code axiARBufferable} was set to {@value true}, on the AXI4 read channel
+    *   side, the output value of 'ARCACHE' was always tied to {@value 0b0011}, indicating
+    *   Normal Non-cacheable Bufferable Memory.
+    *   Otherwise, the 'ARCACHE' was tied to {@value 0b0010}, indicating
+    *   Normal Non-cacheable Non-bufferable Memory.
+    */
+    axiARBufferable             : Boolean               = false
 ) {
 
     require(outstandingDepth >= 1 && outstandingDepth <= 15, 
