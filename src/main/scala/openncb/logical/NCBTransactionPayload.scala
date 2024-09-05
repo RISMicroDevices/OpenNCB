@@ -159,7 +159,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
         }
 
         // valid signals
-        val valid           = Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool()))
+        val valid           = Output(Vec(paramPayloadCapacity, Vec(paramDownstreamMaxBeatCount, Bool())))
     }
 
     /*
