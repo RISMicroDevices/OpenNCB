@@ -6,7 +6,7 @@ import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestAccepted => RequestAccep
 import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestOrder => RequestOrder}
 import cn.rismd.openncb.chi.field.CHIFieldOrder.{EndpointOrder => EndpointOrder}
 import cn.rismd.openncb.chi.bundle.CHIBundleREQ
-import cn.rismd.openncb.chi.channel.CHIChannel
+import cn.rismd.openncb.chi.channel.AbstractCHIChannel
 
 
 /*
@@ -25,7 +25,7 @@ sealed class EnumCHIFieldOrder(ordinal              : Int,
 
     def is(req: CHIBundleREQ)   : Bool  = is(req.Order.get)
 
-    def is[T <: CHIBundleREQ](req: CHIChannel[T]): Bool = is(req.flit)
+    def is[T <: CHIBundleREQ](req: AbstractCHIChannel[T]): Bool = is(req.flit)
     /**/
 }
 

@@ -2,7 +2,7 @@ package cn.rismd.openncb.chi.field
 
 import chisel3._
 import cn.rismd.openncb.chi.bundle.CHIBundleREQ
-import cn.rismd.openncb.chi.channel.CHIChannel
+import cn.rismd.openncb.chi.channel.AbstractCHIChannel
 
 
 /* 
@@ -24,7 +24,7 @@ sealed class EnumCHIFieldSize(ordinal               : Int,
 
     def is(req: CHIBundleREQ)   : Bool  = req.Size.get === value.U
 
-    def is[T <: CHIBundleREQ](req: CHIChannel[T]): Bool = is(req.flit)
+    def is[T <: CHIBundleREQ](req: AbstractCHIChannel[T]): Bool = is(req.flit)
     /**/
 }
 
