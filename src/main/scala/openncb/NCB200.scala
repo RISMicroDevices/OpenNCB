@@ -6,7 +6,7 @@ import org.chipsalliance.cde.config.Field
 import cc.xiangshan.openncb.axi.WithAXI4Parameters
 import cc.xiangshan.openncb.axi.intf.AXI4InterfaceMaster
 import cc.xiangshan.openncb.chi.WithCHIParameters
-import cc.xiangshan.openncb.chi.intf.CHISNFRawInterface
+import cc.xiangshan.openncb.chi.intf.CHISNFInterface
 import cc.xiangshan.openncb.logical._
 import cc.xiangshan.openncb.logical.chi._
 
@@ -21,7 +21,7 @@ class NCB200(implicit val p: Parameters)
 {
     val io = IO(new Bundle {
         // CHI SN-F port
-        val chi                 = CHISNFRawInterface()
+        val chi                 = CHISNFInterface()
 
         // AXI master port
         val axi                 = AXI4InterfaceMaster()
@@ -88,10 +88,10 @@ class NCB200(implicit val p: Parameters)
                                    uTransactionQueue,
                                    uTransactionPayload)
 
-    io.chi.rxreq :>>= uRXREQ.io.rxreq
-    io.chi.rxdat :>>= uRXDAT.io.rxdat
-    io.chi.txrsp :<<= uTXRSP.io.txrsp
-    io.chi.txdat :<<= uTXDAT.io.txdat
+    io.chi.rxreq <> uRXREQ.io.rxreq
+    io.chi.rxdat <> uRXDAT.io.rxdat
+    io.chi.txrsp <> uTXRSP.io.txrsp
+    io.chi.txdat <> uTXDAT.io.txdat
     /**/
 
     /*
