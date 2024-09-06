@@ -13,7 +13,14 @@ import cc.xiangshan.openncb.chi.EnumCHIIssue
 import cc.xiangshan.openncb.chi.intf._
 
 
-class NCB200VTop extends Module {
+/*
+* NCB-200 Verilog Top.
+* 
+* * Recommended to be used for SystemVerilog output generation only.
+* 
+* @param paramRawInterface Whether generate a instance with raw flit ports.
+*/
+class NCB200VTop(val paramRawInterface: Boolean) extends Module {
 
     // Configurations
     implicit val p = new Config((_, _, _) => {
@@ -44,22 +51,32 @@ class NCB200VTop extends Module {
 
     // I/O
     val io = IO(new Bundle {
-        val chi                     = CHISNFRawInterface()
+        val chi                     = {
+            if (paramRawInterface)
+                CHISNFRawInterface()
+            else
+                CHISNFInterface()
+        }
         val axi                     = AXI4InterfaceMaster()
     })
 
     // Module: NCB200
     val uNCB200     = Module(new NCB200)
 
-    io.chi <> uNCB200.io.chi
     io.axi <> uNCB200.io.axi
+    io.chi <> {
+        if (paramRawInterface)
+            uNCB200.io.chi.asToRaw
+        else
+            uNCB200.io.chi
+    }
 }
 
 // Generate to SystemVerilog
 object NCB200VTop extends App {
 
     ChiselStage.emitSystemVerilogFile(
-        new NCB200VTop,
+        new NCB200VTop(false),
         Array("--target-dir", "build")
     )
 }
