@@ -216,7 +216,7 @@ class NCBUpstreamRXDAT(val uLinkActiveManager       : CHILinkActiveManagerRX,
     * @assertion TxnIDNonExist
     *   Received a flit with TxnID with-in outstanding depth range but did not exist.
     */
-    debug.TxnIDNonExist := regRXDAT.flitv && io.queueUpstream.query.result.valid
+    debug.TxnIDNonExist := regRXDAT.flitv && !io.queueUpstream.query.result.valid
     assert(!debug.TxnIDNonExist,
         s"non-exist TxnID (no related transaction found)")
 
