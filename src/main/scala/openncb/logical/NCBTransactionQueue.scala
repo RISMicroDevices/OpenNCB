@@ -1,19 +1,20 @@
 package cn.rismd.openncb.logical
 
 import chisel3._
+import chisel3.util.log2Up
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.axi.WithAXI4Parameters
-import cn.rismd.openncb.chi.WithCHIParameters
 import cn.rismd.openncb.WithNCBParameters
-import chisel3.util.log2Up
-import cn.rismd.openncb.chi.CHIConstants
+import cn.rismd.openncb.axi.WithAXI4Parameters
 import cn.rismd.openncb.axi.field.AXI4FieldAxBURST
 import cn.rismd.openncb.axi.field.AXI4FieldAxSIZE
+import cn.rismd.openncb.chi.CHIConstants
+import cn.rismd.openncb.chi.WithCHIParameters
 import cn.rismd.openncb.util.ParallelMux
+import cn.rismd.openncb.util.ValidMux
 import cn.rismd.openncb.debug.DebugBundle
 import cn.rismd.openncb.debug.DebugSignal
-import cn.rismd.openncb.util.ValidMux
+import freechips.rocketchip.util.SeqToAugmentedSeq
 
 
 /*
@@ -621,20 +622,6 @@ class NCBTransactionQueue(implicit val p: Parameters)
         resetValue
     }))
 
-    // entry allocate logic
-    regQueue.zipWithIndex.foreach({ case (entry, i) => {
-
-        when (io.allocate.en & io.allocate.strb(i)) {
-
-            entry.valid := true.B
-            
-            entry.bits.op       := io.allocate.bits.op
-            entry.bits.info     := io.allocate.bits.info
-            entry.bits.operand  := io.allocate.bits.operand
-            entry.bits.order    := io.allocate.bits.order
-        }
-    }})
-
     // entry free logic
     protected val logicEntryFree    = regQueue.map({ entry => {
         entry.valid & !entry.bits.op.chi.valid & !entry.bits.op.axi.valid
@@ -657,6 +644,29 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
         when(logicOrderHit) {
             entry.bits.order.valid  := false.B
+        }
+    }})
+
+    // entry allocate logic
+    val logicAllocateOrderOrdinal   = VecInit((0 until paramQueueCapacity).map(i => {
+        io.allocate.bits.order.index === i.U
+    }))
+
+    regQueue.zipWithIndex.foreach({ case (entry, i) => {
+
+        when (io.allocate.en & io.allocate.strb(i)) {
+
+            val logicOrderHit   = VecInit(logicEntryFree.zipWithIndex.map({ case (free, j) => {
+                if (i == j) false.B else free && logicAllocateOrderOrdinal(j)
+            }})).asUInt.orR
+
+            entry.valid := true.B
+            
+            entry.bits.op           := io.allocate.bits.op
+            entry.bits.info         := io.allocate.bits.info
+            entry.bits.operand      := io.allocate.bits.operand
+            entry.bits.order.index  := io.allocate.bits.order.index
+            entry.bits.order.valid  := ValidMux(!logicOrderHit, io.allocate.bits.order.valid)
         }
     }})
 
