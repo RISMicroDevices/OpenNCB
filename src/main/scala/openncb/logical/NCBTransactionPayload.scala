@@ -258,9 +258,9 @@ class NCBTransactionPayload(implicit val p: Parameters)
                 if (paramSlotCatCountUpstream == 1)
                     regData(i)(j)   := io.upstream.w.data
                 else
-                    (0 until paramSlotCatCountUpstream).foreach(i => {
-                        regData(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                            io.upstream.w.data.extract(i, paramPayloadSlotDataWidth)
+                    (0 until paramSlotCatCountUpstream).foreach(k => {
+                        regData(i)(Cat(j.U, k.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                            io.upstream.w.data.extract(k, paramPayloadSlotDataWidth)
                     })
             }
         })
@@ -272,9 +272,9 @@ class NCBTransactionPayload(implicit val p: Parameters)
                 if (paramSlotCatCountDownstream == 1)
                     regData(i)(j)   := io.downstream.w.data
                 else
-                    (0 until paramSlotCatCountDownstream).foreach(i => {
-                        regData(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountDownstream).W))) :=
-                            io.downstream.w.data.extract(i, paramPayloadSlotDataWidth)
+                    (0 until paramSlotCatCountDownstream).foreach(k => {
+                        regData(i)(Cat(j.U, k.U(log2Up(paramSlotCatCountDownstream).W))) :=
+                            io.downstream.w.data.extract(k, paramPayloadSlotDataWidth)
                     })
             }
         })
@@ -293,9 +293,9 @@ class NCBTransactionPayload(implicit val p: Parameters)
                 if (paramSlotCatCountUpstream == 1)
                     regMask(i)(j)   := io.upstream.w.mask
                 else
-                    (0 until paramSlotCatCountUpstream).foreach(i => {
-                        regMask(i)(Cat(j.U, i.U(log2Up(paramSlotCatCountUpstream).W))) :=
-                            io.upstream.w.data.extract(i, paramPayloadSlotMaskWidth)
+                    (0 until paramSlotCatCountUpstream).foreach(k => {
+                        regMask(i)(Cat(j.U, k.U(log2Up(paramSlotCatCountUpstream).W))) :=
+                            io.upstream.w.mask.extract(k, paramPayloadSlotMaskWidth)
                     })
             }
         })
