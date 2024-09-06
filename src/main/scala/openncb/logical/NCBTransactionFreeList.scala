@@ -65,7 +65,7 @@ class NCBTransactionFreeList(implicit val p: Parameters)
 
 
     // One-Hot Free Flag Registers
-    protected val regFree     = RegInit(VecInit(Seq.fill(paramNCB.outstandingDepth)(false.B)))
+    protected val regFree     = RegInit(VecInit((Seq.fill(paramNCB.outstandingDepth)(true.B))))
 
     // one-hot selection logic
     private var logicFreeCarry  = Seq.fill(paramNCB.outstandingDepth + 1)(WireInit(false.B))
