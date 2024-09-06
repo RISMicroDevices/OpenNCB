@@ -1,30 +1,30 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.experimental.BundleLiterals._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.chi.channel.CHIChannelRXREQ
-import cn.rismd.openncb.logical.chi.CHILinkCreditManagerRX
-import cn.rismd.openncb.logical.chi.CHILinkActiveManagerRX
-import cn.rismd.openncb.chi.opcode.CHISNFOpcodesREQ
-import cn.rismd.openncb.debug.CompanionConnection
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
-import cn.rismd.openncb.chi.field.CHIFieldSize
-import cn.rismd.openncb.chi.field.CHIFieldOrder
-import cn.rismd.openncb.chi.field.CHIFieldMemAttr
-import cn.rismd.openncb.chi.field.EnumCHIFieldOrder
-import cn.rismd.openncb.util.XZBarrier
-import cn.rismd.openncb.axi.field.AXI4FieldAxSIZE
-import cn.rismd.openncb.axi.field.AXI4FieldAxBURST
-import cn.rismd.openncb.axi.WithAXI4Parameters
-import cn.rismd.openncb.chi.CHIConstants
-import cn.rismd.openncb.EnumAXIMasterOrder
-import cn.rismd.openncb.chi.field.CHIFieldRespErr
+import cc.xiangshan.openncb.EnumAXIMasterOrder
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.axi.WithAXI4Parameters
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxSIZE
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxBURST
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.chi.CHIConstants
+import cc.xiangshan.openncb.chi.opcode.CHISNFOpcodesREQ
+import cc.xiangshan.openncb.chi.channel.CHIChannelRXREQ
+import cc.xiangshan.openncb.chi.field.CHIFieldRespErr
+import cc.xiangshan.openncb.chi.field.CHIFieldSize
+import cc.xiangshan.openncb.chi.field.CHIFieldOrder
+import cc.xiangshan.openncb.chi.field.CHIFieldMemAttr
+import cc.xiangshan.openncb.chi.field.EnumCHIFieldOrder
+import cc.xiangshan.openncb.logical.chi.CHILinkCreditManagerRX
+import cc.xiangshan.openncb.logical.chi.CHILinkActiveManagerRX
+import cc.xiangshan.openncb.util.XZBarrier
+import cc.xiangshan.openncb.debug.CompanionConnection
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /* 

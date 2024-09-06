@@ -1,10 +1,10 @@
-package cn.rismd.openncb.axi.field
+package cc.xiangshan.openncb.axi.field
 
 import chisel3._
-import cn.rismd.openncb.axi.field.AXI4FieldRESP.{OKAY => OKAY}
-import cn.rismd.openncb.axi.field.AXI4FieldRESP.{EXOKAY => EXOKAY}
-import cn.rismd.openncb.axi.field.AXI4FieldRESP.{SLVERR => SLVERR}
-import cn.rismd.openncb.axi.field.AXI4FieldRESP.{DECERR => DECERR}
+import cc.xiangshan.openncb.axi.field.AXI4FieldRESP.{OKAY => OKAY}
+import cc.xiangshan.openncb.axi.field.AXI4FieldRESP.{EXOKAY => EXOKAY}
+import cc.xiangshan.openncb.axi.field.AXI4FieldRESP.{SLVERR => SLVERR}
+import cc.xiangshan.openncb.axi.field.AXI4FieldRESP.{DECERR => DECERR}
 
 
 /*

@@ -1,16 +1,16 @@
-package cn.rismd.openncb
+package cc.xiangshan.openncb
 
 import chisel3._
 import chisel3.util.experimental.forceName
 import circt.stage.ChiselStage
 import org.chipsalliance.cde.config.Config
-import cn.rismd.openncb.axi.AXI4Parameters
-import cn.rismd.openncb.axi.AXI4ParametersKey
-import cn.rismd.openncb.axi.intf.AXI4InterfaceMaster
-import cn.rismd.openncb.chi.CHIParameters
-import cn.rismd.openncb.chi.CHIParametersKey
-import cn.rismd.openncb.chi.EnumCHIIssue
-import cn.rismd.openncb.chi.intf._
+import cc.xiangshan.openncb.axi.AXI4Parameters
+import cc.xiangshan.openncb.axi.AXI4ParametersKey
+import cc.xiangshan.openncb.axi.intf.AXI4InterfaceMaster
+import cc.xiangshan.openncb.chi.CHIParameters
+import cc.xiangshan.openncb.chi.CHIParametersKey
+import cc.xiangshan.openncb.chi.EnumCHIIssue
+import cc.xiangshan.openncb.chi.intf._
 
 
 class NCB200VTop extends Module {

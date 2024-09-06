@@ -1,14 +1,14 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.debug.DebugElement
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.debug.DebugElement
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /*

@@ -1,4 +1,4 @@
-package cn.rismd.openncb.debug
+package cc.xiangshan.openncb.debug
 
 import chisel3._
 

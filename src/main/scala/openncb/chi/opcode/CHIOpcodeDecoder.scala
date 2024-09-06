@@ -1,12 +1,12 @@
-package cn.rismd.openncb.chi.opcode
+package cc.xiangshan.openncb.chi.opcode
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.chi.EnumCHIChannel
-import cn.rismd.openncb.chi.opcode.CHIOpcode
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.chi.EnumCHIChannel
+import cc.xiangshan.openncb.chi.opcode.CHIOpcode
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 import freechips.rocketchip.util.SeqToAugmentedSeq
 
 /*

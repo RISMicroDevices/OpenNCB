@@ -1,4 +1,4 @@
-package cn.rismd.openncb.chi
+package cc.xiangshan.openncb.chi
 
 import chisel3._
 

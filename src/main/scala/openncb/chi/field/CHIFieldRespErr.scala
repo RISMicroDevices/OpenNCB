@@ -1,13 +1,13 @@
-package cn.rismd.openncb.chi.field
+package cc.xiangshan.openncb.chi.field
 
 import chisel3._
-import cn.rismd.openncb.chi.bundle.CHIBundleRSP
-import cn.rismd.openncb.chi.bundle.CHIBundleDAT
-import cn.rismd.openncb.chi.channel.CHIChannel
-import cn.rismd.openncb.chi.field.CHIFieldRespErr.{OK => OK}
-import cn.rismd.openncb.chi.field.CHIFieldRespErr.{EXOK => EXOK}
-import cn.rismd.openncb.chi.field.CHIFieldRespErr.{DERR => DERR}
-import cn.rismd.openncb.chi.field.CHIFieldRespErr.{NDERR => NDERR}
+import cc.xiangshan.openncb.chi.bundle.CHIBundleRSP
+import cc.xiangshan.openncb.chi.bundle.CHIBundleDAT
+import cc.xiangshan.openncb.chi.channel.CHIChannel
+import cc.xiangshan.openncb.chi.field.CHIFieldRespErr.{OK => OK}
+import cc.xiangshan.openncb.chi.field.CHIFieldRespErr.{EXOK => EXOK}
+import cc.xiangshan.openncb.chi.field.CHIFieldRespErr.{DERR => DERR}
+import cc.xiangshan.openncb.chi.field.CHIFieldRespErr.{NDERR => NDERR}
 
 
 /*

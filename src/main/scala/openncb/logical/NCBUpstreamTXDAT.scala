@@ -1,20 +1,20 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.util.OHToUInt
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.chi.CHIConstants
-import cn.rismd.openncb.chi.opcode.CHISNFOpcodesDAT
-import cn.rismd.openncb.chi.channel.CHIChannelTXDAT
-import cn.rismd.openncb.logical.chi.CHILinkActiveManagerTX
-import cn.rismd.openncb.logical.chi.CHILinkCreditManagerTX
-import cn.rismd.openncb.util.ValidMux
-import cn.rismd.openncb.debug.CompanionConnection
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.chi.CHIConstants
+import cc.xiangshan.openncb.chi.opcode.CHISNFOpcodesDAT
+import cc.xiangshan.openncb.chi.channel.CHIChannelTXDAT
+import cc.xiangshan.openncb.logical.chi.CHILinkActiveManagerTX
+import cc.xiangshan.openncb.logical.chi.CHILinkCreditManagerTX
+import cc.xiangshan.openncb.util.ValidMux
+import cc.xiangshan.openncb.debug.CompanionConnection
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /*

@@ -1,12 +1,12 @@
-package cn.rismd.openncb.chi.field
+package cc.xiangshan.openncb.chi.field
 
 import chisel3._
-import cn.rismd.openncb.chi.field.CHIFieldOrder.{NoOrdering => NoOrdering}
-import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestAccepted => RequestAccepted}
-import cn.rismd.openncb.chi.field.CHIFieldOrder.{RequestOrder => RequestOrder}
-import cn.rismd.openncb.chi.field.CHIFieldOrder.{EndpointOrder => EndpointOrder}
-import cn.rismd.openncb.chi.bundle.CHIBundleREQ
-import cn.rismd.openncb.chi.channel.AbstractCHIChannel
+import cc.xiangshan.openncb.chi.field.CHIFieldOrder.{NoOrdering => NoOrdering}
+import cc.xiangshan.openncb.chi.field.CHIFieldOrder.{RequestAccepted => RequestAccepted}
+import cc.xiangshan.openncb.chi.field.CHIFieldOrder.{RequestOrder => RequestOrder}
+import cc.xiangshan.openncb.chi.field.CHIFieldOrder.{EndpointOrder => EndpointOrder}
+import cc.xiangshan.openncb.chi.bundle.CHIBundleREQ
+import cc.xiangshan.openncb.chi.channel.AbstractCHIChannel
 
 
 /*

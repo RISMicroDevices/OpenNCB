@@ -1,9 +1,9 @@
-package cn.rismd.openncb.axi.field
+package cc.xiangshan.openncb.axi.field
 
 import chisel3._
-import cn.rismd.openncb.axi.field.AXI4FieldAxBURST.{Fixed => Fixed}
-import cn.rismd.openncb.axi.field.AXI4FieldAxBURST.{Incr => Incr}
-import cn.rismd.openncb.axi.field.AXI4FieldAxBURST.{Wrap => Wrap}
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxBURST.{Fixed => Fixed}
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxBURST.{Incr => Incr}
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxBURST.{Wrap => Wrap}
 
 
 /*

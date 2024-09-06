@@ -1,12 +1,12 @@
-package cn.rismd.openncb.logical.chi
+package cc.xiangshan.openncb.logical.chi
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi.CHIConstants._
+import cc.xiangshan.openncb.chi.CHIConstants._
 import chisel3.util.log2Up
 import chisel3.util.RegEnable
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /* 
@@ -15,7 +15,7 @@ import cn.rismd.openncb.debug.DebugSignal
 * * Supported Link-Layer states: STOP, ACT, RUN, DEACT.
 * 
 * @param maxCount   Specify the maximum grantable link credit count. By default,
-*                   {@see cn.rismd.openncb.chi.CHIConstants#CHI_MAX_REASONABLE_LINK_CREIDT_COUNT}
+*                   {@see cc.xiangshan.openncb.chi.CHIConstants#CHI_MAX_REASONABLE_LINK_CREIDT_COUNT}
 */
 class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE_LINK_CREDIT_COUNT)
         extends AbstractCHILinkCreditManager {

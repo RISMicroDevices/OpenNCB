@@ -1,9 +1,9 @@
-package cn.rismd.openncb.chi.channel
+package cc.xiangshan.openncb.chi.channel
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi.bundle._
-import cn.rismd.openncb.chi.EnumCHIChannel
+import cc.xiangshan.openncb.chi.bundle._
+import cc.xiangshan.openncb.chi.EnumCHIChannel
 
 
 /*

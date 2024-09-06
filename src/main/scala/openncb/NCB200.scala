@@ -1,14 +1,14 @@
-package cn.rismd.openncb
+package cc.xiangshan.openncb
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.axi.WithAXI4Parameters
-import cn.rismd.openncb.axi.intf.AXI4InterfaceMaster
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.chi.intf.CHISNFRawInterface
-import cn.rismd.openncb.logical._
-import cn.rismd.openncb.logical.chi._
+import cc.xiangshan.openncb.axi.WithAXI4Parameters
+import cc.xiangshan.openncb.axi.intf.AXI4InterfaceMaster
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.chi.intf.CHISNFRawInterface
+import cc.xiangshan.openncb.logical._
+import cc.xiangshan.openncb.logical.chi._
 
 
 /*

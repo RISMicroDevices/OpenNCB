@@ -1,20 +1,19 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.util.log2Up
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.axi.WithAXI4Parameters
-import cn.rismd.openncb.axi.field.AXI4FieldAxBURST
-import cn.rismd.openncb.axi.field.AXI4FieldAxSIZE
-import cn.rismd.openncb.chi.CHIConstants
-import cn.rismd.openncb.chi.WithCHIParameters
-import cn.rismd.openncb.util.ParallelMux
-import cn.rismd.openncb.util.ValidMux
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
-import freechips.rocketchip.util.SeqToAugmentedSeq
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.axi.WithAXI4Parameters
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxBURST
+import cc.xiangshan.openncb.axi.field.AXI4FieldAxSIZE
+import cc.xiangshan.openncb.chi.CHIConstants
+import cc.xiangshan.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.util.ParallelMux
+import cc.xiangshan.openncb.util.ValidMux
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /*

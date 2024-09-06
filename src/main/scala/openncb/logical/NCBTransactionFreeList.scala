@@ -1,12 +1,12 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.util.PopCount
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.debug.DebugBundle
-import cn.rismd.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.debug.DebugBundle
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /*

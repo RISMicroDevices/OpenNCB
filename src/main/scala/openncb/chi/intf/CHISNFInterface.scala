@@ -1,9 +1,9 @@
-package cn.rismd.openncb.chi.intf
+package cc.xiangshan.openncb.chi.intf
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi.channel._
-import cn.rismd.openncb.chi.WithCHIParameters
+import cc.xiangshan.openncb.chi.channel._
+import cc.xiangshan.openncb.chi.WithCHIParameters
 
 
 /*

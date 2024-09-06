@@ -1,4 +1,4 @@
-package cn.rismd.openncb
+package cc.xiangshan.openncb
 
 import chisel3._
 import chisel3.experimental.VecLiterals._

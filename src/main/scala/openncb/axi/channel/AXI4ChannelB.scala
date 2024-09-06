@@ -1,9 +1,9 @@
-package cn.rismd.openncb.axi.channel
+package cc.xiangshan.openncb.axi.channel
 
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.axi.bundle._
+import cc.xiangshan.openncb.axi.bundle._
 
 
 /*

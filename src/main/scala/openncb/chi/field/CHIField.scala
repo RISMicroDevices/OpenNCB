@@ -1,8 +1,8 @@
-package cn.rismd.openncb.chi.field
+package cc.xiangshan.openncb.chi.field
 
 import org.chipsalliance.cde.config.Parameters
 import chisel3._
-import cn.rismd.openncb.chi._
+import cc.xiangshan.openncb.chi._
 
 
 /*

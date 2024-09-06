@@ -1,4 +1,4 @@
-package cn.rismd.openncb.debug
+package cc.xiangshan.openncb.debug
 
 import scala.annotation.StaticAnnotation
 

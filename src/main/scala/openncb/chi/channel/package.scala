@@ -1,9 +1,9 @@
-package cn.rismd.openncb.chi
+package cc.xiangshan.openncb.chi
 
 import chisel3._
 import chisel3.util.Cat
-import cn.rismd.openncb.chi.bundle.CHIBundleDAT
-import cn.rismd.openncb.chi.bundle.AbstractCHIBundle
+import cc.xiangshan.openncb.chi.bundle.CHIBundleDAT
+import cc.xiangshan.openncb.chi.bundle.AbstractCHIBundle
 import freechips.rocketchip.util.SeqToAugmentedSeq
 import freechips.rocketchip.util.DataToAugmentedData
 

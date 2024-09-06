@@ -1,4 +1,4 @@
-package cn.rismd.openncb.logical.shared
+package cc.xiangshan.openncb.logical.shared
 
 import chisel3._
 import chisel3.util._

@@ -1,15 +1,15 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import chisel3.util.OHToUInt
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.debug.CompanionConnection
-import cn.rismd.openncb.axi.WithAXI4Parameters
-import cn.rismd.openncb.WithNCBParameters
-import cn.rismd.openncb.axi.channel.AXI4ChannelMasterAR
-import cn.rismd.openncb.logical.shared.SpillRegister
-import cn.rismd.openncb.util.ValidMux
+import cc.xiangshan.openncb.WithNCBParameters
+import cc.xiangshan.openncb.axi.WithAXI4Parameters
+import cc.xiangshan.openncb.axi.channel.AXI4ChannelMasterAR
+import cc.xiangshan.openncb.logical.shared.SpillRegister
+import cc.xiangshan.openncb.debug.CompanionConnection
+import cc.xiangshan.openncb.util.ValidMux
 
 
 /* 

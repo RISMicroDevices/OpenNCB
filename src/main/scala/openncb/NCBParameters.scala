@@ -1,4 +1,4 @@
-package cn.rismd.openncb
+package cc.xiangshan.openncb
 
 import org.chipsalliance.cde.config.Field
 import chisel3.util.log2Up

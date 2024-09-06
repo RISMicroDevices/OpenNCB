@@ -1,4 +1,4 @@
-package cn.rismd.openncb.logical.chi
+package cc.xiangshan.openncb.logical.chi
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters

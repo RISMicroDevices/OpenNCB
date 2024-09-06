@@ -1,8 +1,8 @@
-package cn.rismd.openncb.chi.bundle
+package cc.xiangshan.openncb.chi.bundle
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi._
+import cc.xiangshan.openncb.chi._
 
 abstract class AbstractCHIBundle(implicit val p: Parameters) extends Bundle with WithCHIParameters {
 

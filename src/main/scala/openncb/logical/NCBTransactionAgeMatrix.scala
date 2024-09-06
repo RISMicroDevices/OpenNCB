@@ -1,10 +1,9 @@
-package cn.rismd.openncb.logical
+package cc.xiangshan.openncb.logical
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
-import cn.rismd.openncb.WithNCBParameters
-import freechips.rocketchip.util.SeqToAugmentedSeq
+import cc.xiangshan.openncb.WithNCBParameters
 
 
 /* 

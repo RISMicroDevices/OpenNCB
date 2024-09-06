@@ -1,11 +1,11 @@
-package cn.rismd.openncb.chi.opcode
+package cc.xiangshan.openncb.chi.opcode
 
 import chisel3._
 import org.chipsalliance.cde.config.Parameters
-import cn.rismd.openncb.chi._
-import cn.rismd.openncb.chi.EnumCHIIssue._
-import cn.rismd.openncb.chi.EnumCHIChannel._
-import cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder
+import cc.xiangshan.openncb.chi._
+import cc.xiangshan.openncb.chi.EnumCHIIssue._
+import cc.xiangshan.openncb.chi.EnumCHIChannel._
+import cc.xiangshan.openncb.chi.opcode.CHIOpcodeDecoder
 
 
 /* 
@@ -29,7 +29,7 @@ trait CHISNFOpcodesDAT extends WithCHIParameters {
     /* 
     * Decoder for CHI Opcodes of SN-F DAT
     * 
-    * @see {@code cn.rismd.openncb.chi.opcode.CHIOpcodeDecoder}
+    * @see {@code cc.xiangshan.openncb.chi.opcode.CHIOpcodeDecoder}
     */ 
     class Decoder(paramOpcodeSupported          : Seq[CHIOpcode]    = Seq(),
                   paramEnableUnsupportedCheck   : Boolean           = false)
