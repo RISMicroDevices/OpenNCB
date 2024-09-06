@@ -140,9 +140,9 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    debug.LinkCreditOverflow := regLinkCreditCounter === paramMaxCount.U && io.lcrdv
+    debug.LinkCreditOverflow := regLinkCreditCounter === paramMaxCount.U && regLcrdv
     assert(!debug.LinkCreditOverflow,
-        "link credit overflow")
+        s"link credit overflow (with maximum ${paramMaxCount})")
 
     /*
     * @assertion LinkCreditUnderflow
