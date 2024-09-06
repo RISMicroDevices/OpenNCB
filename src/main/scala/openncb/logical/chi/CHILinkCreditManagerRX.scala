@@ -1,12 +1,14 @@
 package cc.xiangshan.openncb.logical.chi
 
 import chisel3._
-import org.chipsalliance.cde.config.Parameters
-import cc.xiangshan.openncb.chi.CHIConstants._
 import chisel3.util.log2Up
 import chisel3.util.RegEnable
+import chisel3.util.PopCount
+import org.chipsalliance.cde.config.Parameters
+import cc.xiangshan.openncb.chi.CHIConstants._
 import cc.xiangshan.openncb.debug.DebugBundle
 import cc.xiangshan.openncb.debug.DebugSignal
+import cc.xiangshan.openncb.util.ValidMux
 
 
 /* 
@@ -121,7 +123,9 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     // output register of Link Credit Valid
     protected val regLcrdv  = RegNext(
         init = 0.B, 
-        next = Mux(logicInitialCreditDone, io.linkCreditProvide, logicInitialCycleEnd))
+        next = ValidMux(io.linkState.run, Mux(logicInitialCreditDone,
+            io.linkCreditProvide,
+            logicInitialCycleEnd)))
 
 
     // module output
@@ -159,8 +163,12 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     * @assertion LinkActiveStateNotOneHot
     *   The states from Link Active must be one-hot. 
     */
-    private val debugLogicLinkactivePopcnt  = Wire(UInt(3.W))
-    debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
+    private val debugLogicLinkactivePopcnt  = PopCount(Seq(
+        io.linkState.stop,
+        io.linkState.activate,
+        io.linkState.run,
+        io.linkState.deactivate
+    ))
     debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
     assert(!debug.LinkActiveStateNotOneHot,
         "linkactive state must be one-hot")
@@ -186,9 +194,9 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
     *   The 'lcrdv' was not allowed to be asserted when the Link Credit received exceeded 
     *   the maximum number.
     */
-    debug.LinkCreditOverflow := paramEnableMonitor.B && (debugRegMonitorCreditCounter === paramMaxCount.U && io.lcrdv)
+    debug.LinkCreditOverflow := paramEnableMonitor.B && (debugRegMonitorCreditCounter === paramMaxCount.U) && io.lcrdv
     assert(!debug.LinkCreditOverflow,
-        "link credit overflow")
+        s"link credit overflow (with maximum ${paramMaxCount})")
 
     /*
     * @assertion LinkCreditUnderflow

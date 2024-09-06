@@ -1,10 +1,11 @@
 package cc.xiangshan.openncb.logical.chi
 
 import chisel3._
-import org.chipsalliance.cde.config.Parameters
-import cc.xiangshan.openncb.chi.CHIConstants._
 import chisel3.util.log2Up
 import chisel3.util.RegEnable
+import chisel3.util.PopCount
+import org.chipsalliance.cde.config.Parameters
+import cc.xiangshan.openncb.chi.CHIConstants._
 import cc.xiangshan.openncb.debug.DebugBundle
 import cc.xiangshan.openncb.debug.DebugSignal
 
@@ -100,8 +101,12 @@ class CHILinkCreditManagerTX(val paramMaxCount      : Int   = CHI_MAX_REASONABLE
     * @assertion LinkActiveStateNotOneHot
     *   The states from Link Active must be one-hot. 
     */
-    private val debugLogicLinkactivePopcnt = Wire(UInt(3.W))
-    debugLogicLinkactivePopcnt := io.linkState.stop.asUInt + io.linkState.activate.asUInt + io.linkState.run.asUInt + io.linkState.stop.asUInt
+    private val debugLogicLinkactivePopcnt = PopCount(Seq(
+        io.linkState.stop,
+        io.linkState.activate,
+        io.linkState.run,
+        io.linkState.deactivate
+    ))
     debug.LinkActiveStateNotOneHot := debugLogicLinkactivePopcnt =/= 1.U
     assert(!debug.LinkActiveStateNotOneHot,
         "linkactive state must be one-hot")
