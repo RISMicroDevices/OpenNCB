@@ -30,6 +30,30 @@ class CHISNFInterface(implicit val p: Parameters) extends Bundle with WithCHIPar
     // TXLINKACTIVE
     val txlinkactivereq     = Output(Bool())
     val txlinkactiveack     = Input(Bool())
+
+    
+    // utility functions - convert to raw interface
+    def asToRaw = {
+        val raw = Wire(CHISNFRawInterface())
+        raw :<<= this
+        raw
+    }
+
+    def asToRaw(raw: CHISNFRawInterface) = {
+        raw :<<= this
+        raw
+    }
+
+    def asFromRaw = {
+        val raw = Wire(CHISNFRawInterface())
+        raw :>>= this
+        raw
+    }
+
+    def asFromRaw(raw: CHISNFRawInterface) = {
+        raw :>>= this
+        raw
+    }
 }
 
 object CHISNFInterface {
