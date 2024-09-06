@@ -135,7 +135,7 @@ class NCBDownstreamAR(val uTransactionAgeMatrix : NCBTransactionAgeMatrix,
     wireSpillAR.bits.prot   := "b010".U
     wireSpillAR.bits.qos    := {
         if (paramNCB.axiConstantARQoS)
-            paramNCB.axiConstantAWQoSValue.U
+            paramNCB.axiConstantARQoSValue.U
         else
             io.queue.infoRead.bits.QoS
     }
