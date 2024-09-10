@@ -61,6 +61,9 @@ class NCBTransactionFreeList(implicit val p: Parameters)
 
         // free port
         val free        = new FreePort
+
+        // empty signal
+        val empty       = Output(Bool())
     })
 
 
@@ -92,6 +95,9 @@ class NCBTransactionFreeList(implicit val p: Parameters)
 
     // allocation output
     io.allocate.strb    := logicFreeOut
+
+    // empty signal
+    io.empty    := !regFree.asUInt.andR
 
 
     // assertions & debugs

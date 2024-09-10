@@ -64,6 +64,9 @@ class NCB200(implicit val p: Parameters)
     // Module: Transaction Data Payload
     val uTransactionPayload     = Module(new NCBTransactionPayload)
 
+    // TXSACTIVE
+    io.chi.txsactive    := !uTransactionFreeList.io.empty
+
     /*
     * Upstream CHI Channel Subordinates
     */
