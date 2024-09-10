@@ -48,4 +48,45 @@ class AXI4BundleAR(implicit p: Parameters) extends AbstractAXI4Bundle {
     */
     def asRocketChip = new freechips.rocketchip.amba.axi4.AXI4BundleAR(
         p(AXI4ParametersKey).asRocketChip)
+
+    /* 
+    * Connect this bundle to rocket-chip bundle.
+    * 
+    * @return Connected {@code freechips.rocketchip.amba.axi4.AXI4BundleAR}.
+    */
+    def asToRocketChip = {
+        val rocketchipAR    = Wire(asRocketChip)
+        rocketchipAR.id     := id
+        rocketchipAR.addr   := addr
+        rocketchipAR.len    := len
+        rocketchipAR.size   := size
+        rocketchipAR.burst  := burst
+        rocketchipAR.lock   := lock
+        rocketchipAR.cache  := cache
+        rocketchipAR.prot   := prot
+        rocketchipAR.qos    := qos
+    //  rocketchipAR.user   := DontCare
+    //  rocketchipAR.echo   := DontCare
+        rocketchipAR
+    }
+
+    /*
+    * Connect this bundle from rocket-chip bundle type. 
+    * 
+    * @return Connected {@code freechips.rocketchip.amba.axi4.AXI4BundleAR}.
+    */
+    def asFromRocketChip = {
+        val rocketchipAR    = Wire(asRocketChip)
+        id      := rocketchipAR.id
+        addr    := rocketchipAR.addr
+        len     := rocketchipAR.len
+        size    := rocketchipAR.size
+        burst   := rocketchipAR.burst
+        lock    := rocketchipAR.lock
+        cache   := rocketchipAR.cache
+        prot    := rocketchipAR.prot
+        qos     := rocketchipAR.qos
+    //  region  := DontCare
+        rocketchipAR
+    }
 }

@@ -11,19 +11,25 @@ import cc.xiangshan.openncb.axi.bundle._
 */
 class AXI4ChannelW[+T <: AXI4BundleW](gen: T) extends AbstractAXI4Channel[T](gen)
 
-
-// Master W Channel.
-object AXI4ChannelMasterW {
+object AXI4ChannelW {
 
     def apply[T <: AXI4BundleW](gen: T) = new AXI4ChannelW(gen)
 
     def apply()(implicit p: Parameters) = new AXI4ChannelW(new AXI4BundleW)
 }
 
+// Master W Channel.
+object AXI4ChannelMasterW {
+
+    def apply[T <: AXI4BundleW](gen: T) = AXI4ChannelW(gen)
+
+    def apply()(implicit p: Parameters) = AXI4ChannelW()
+}
+
 // Slave W Channel.
 object AXI4ChannelSlaveW {
 
-    def apply[T <: AXI4BundleW](gen: T) = Flipped(new AXI4ChannelW(gen))
+    def apply[T <: AXI4BundleW](gen: T) = Flipped(AXI4ChannelW(gen))
 
-    def apply()(implicit p: Parameters) = Flipped(new AXI4ChannelW(new AXI4BundleW))
+    def apply()(implicit p: Parameters) = Flipped(AXI4ChannelW())
 }
