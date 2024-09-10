@@ -10,16 +10,16 @@ import chisel3.util._
 object SpillRegister {
 
     def apply[T <: Data](gen: T) = {
-        require(!gen.isInstanceOf[DecoupledIO[?]],
-            "use 'applyDecoupled(...)' instead when passing in DecoupledIO")
+        require(!gen.isInstanceOf[ReadyValidIO[?]],
+            "use 'applyReadyValid(...)' instead when passing in ReadyValidIO")
         Module(new SpillRegister[T, T](gen))
     }
 
-    def applyDecoupled[D <: Data](gen: DecoupledIO[D]) = {
-        Module(new SpillRegister[D, DecoupledIO[D]](gen))
+    def applyReadyValid[D <: Data](gen: ReadyValidIO[D]) = {
+        Module(new SpillRegister[D, ReadyValidIO[D]](gen))
     }
 
-    def attachDecoupled[D <: DecoupledIO[D]](in: DecoupledIO[D], out: DecoupledIO[D]) = {
+    def attachReadyValid[D <: ReadyValidIO[D]](in: ReadyValidIO[D], out: ReadyValidIO[D]) = {
         val uSpillRegister = Module(new SpillRegister(
             chiselTypeOf(out)
         ))
@@ -28,7 +28,7 @@ object SpillRegister {
         uSpillRegister
     }
 
-    def attachIn[T <: DecoupledIO[Data]](in: T): T = {
+    def attachIn[T <: ReadyValidIO[Data]](in: T): T = {
         val uSpillRegister = Module(new SpillRegister(
             chiselTypeOf(in)
         ))
@@ -36,7 +36,7 @@ object SpillRegister {
         uSpillRegister.io.out.asInstanceOf[T]
     }
 
-    def attachOut[T <: DecoupledIO[Data]](out: T): T = {
+    def attachOut[T <: ReadyValidIO[Data]](out: T): T = {
         val uSpillRegister = Module(new SpillRegister(
             chiselTypeOf(out)
         ))
@@ -55,19 +55,19 @@ class SpillRegister[+D <: Data, +T <: Data](gen: T) extends Module {
     */
     val io = IO(new Bundle {
         // upstream input
-        val in              : DecoupledIO[D] = {
-            if (gen.isInstanceOf[DecoupledIO[Data]])
-                Flipped(gen.asInstanceOf[Data]).asInstanceOf[DecoupledIO[D]]
+        val in              : ReadyValidIO[D] = {
+            if (gen.isInstanceOf[ReadyValidIO[Data]])
+                Flipped(gen.asInstanceOf[Data]).asInstanceOf[ReadyValidIO[D]]
             else
-                Flipped(Decoupled(gen)).asInstanceOf[DecoupledIO[D]]
+                Flipped(Decoupled(gen)).asInstanceOf[ReadyValidIO[D]]
         }
 
         // downstream output
-        val out             : DecoupledIO[D] = {
-            if (gen.isInstanceOf[DecoupledIO[Data]])
-                Flipped(Flipped(gen.asInstanceOf[DecoupledIO[D]]))
+        val out             : ReadyValidIO[D] = {
+            if (gen.isInstanceOf[ReadyValidIO[Data]])
+                Flipped(Flipped(gen.asInstanceOf[ReadyValidIO[D]]))
             else
-                Flipped(Flipped(Decoupled(gen).asInstanceOf[DecoupledIO[D]]))
+                Flipped(Flipped(Decoupled(gen).asInstanceOf[ReadyValidIO[D]]))
         }
     })
 
