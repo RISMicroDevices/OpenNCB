@@ -242,8 +242,8 @@ class CHILinkCreditManagerRX(val paramMaxCount          : Int       = CHI_MAX_RE
 
         protected val logicBufferEmpty      = regBufferedCreditCounter === 0.U
 
-        protected val logicBufferIncrease   = ( logicBufferPushReady & !logicBufferPopReady)
-        protected val logicBufferDecrease   = (!logicBufferPushReady &  logicBufferPopReady) && !logicBufferEmpty
+        protected val logicBufferIncrease   = ( logicBufferPushReady & (!logicBufferPopReady | logicBufferEmpty))
+        protected val logicBufferDecrease   = (!logicBufferPushReady &   logicBufferPopReady) && !logicBufferEmpty
 
         when (logicBufferIncrease) {
             regBufferedCreditCounter    := regBufferedCreditCounter + 1.U
