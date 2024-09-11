@@ -60,6 +60,7 @@ class NCB200VTop(val paramRawInterface: Boolean) extends Module {
         val axi                     = AXI4InterfaceMaster()
     })
 
+    
     // Module: NCB200
     val uNCB200     = Module(new NCB200)
 
@@ -70,6 +71,12 @@ class NCB200VTop(val paramRawInterface: Boolean) extends Module {
         else
             uNCB200.io.chi
     }
+
+
+    // Debug Signals
+    val debug   = IO(Output(chiselTypeOf(uNCB200.debug)))
+
+    debug <> uNCB200.debug
 }
 
 // Generate to SystemVerilog
