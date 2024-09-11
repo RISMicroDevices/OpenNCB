@@ -83,7 +83,7 @@ class NCBTransactionAgeMatrix(implicit val p: Parameters)
         else if (row == col)
             true.B
         else
-            ~regAge(row)(col)
+            ~regAge(col)(row)
     }
 
     // age matrix update
