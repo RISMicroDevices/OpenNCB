@@ -516,7 +516,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.info.ReturnTxnID  := regRXREQ.flit.ReturnTxnID.get
 
     // convert to CHI operands
-    io.queueAllocate.bits.operand.chi.Addr  := io.rxreq.flit.Addr.get
+    io.queueAllocate.bits.operand.chi.Addr  := regRXREQ.flit.Addr.get
 
     io.queueAllocate.bits.operand.chi.WriteFull := uDecoder.is(WriteNoSnpFull)
     io.queueAllocate.bits.operand.chi.WritePtl  := uDecoder.is(WriteNoSnpPtl)
@@ -556,7 +556,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
 
 
     // convert to AXI operands
-    io.queueAllocate.bits.operand.axi.Addr  := io.rxreq.flit.Addr.get
+    io.queueAllocate.bits.operand.axi.Addr  := regRXREQ.flit.Addr.get
 
     when (CHIFieldSize.Size1B.is(regRXREQ)) {
         io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
