@@ -9,6 +9,7 @@ import cc.xiangshan.openncb.chi.WithCHIParameters
 import cc.xiangshan.openncb.chi.intf.CHISNFInterface
 import cc.xiangshan.openncb.logical._
 import cc.xiangshan.openncb.logical.chi._
+import cc.xiangshan.openncb.debug.DebugSignal
 
 
 /*
@@ -123,4 +124,44 @@ class NCB200(implicit val p: Parameters)
     io.axi.ar <> uAR.io.ar
     io.axi.r  <> uR .io.r
     /**/
+
+
+    // debug signals
+    /*
+    * Port I/O: Debug
+    * 
+    * @io output    valid   : Debug Valid, asserted on any submodule debug signal asserted.
+    * @io output    reason  : Debug Valid Reason.
+    */
+    @DebugSignal
+    val debug   = IO(new Bundle {
+        val valid   = Output(Bool())
+        val reason  = Output(new Bundle {
+            val orderAddressCAM         = chiselTypeOf(uOrderAddressCAM.debug)
+            val orderRequestCAM         = chiselTypeOf(uOrderRequestCAM.debug)
+            val transactionFreeList     = chiselTypeOf(uTransactionFreeList.debug)
+            val transactionQueue        = chiselTypeOf(uTransactionQueue.debug)
+            val transactionPayload      = chiselTypeOf(uTransactionPayload.debug)
+            val chiRXREQ                = chiselTypeOf(uRXREQ.debug)
+            val chiRXDAT                = chiselTypeOf(uRXDAT.debug)
+            val chiTXRSP                = chiselTypeOf(uTXRSP.debug)
+            val chiTXDAT                = chiselTypeOf(uTXDAT.debug)
+            val axiB                    = chiselTypeOf(uB.debug)
+            val axiR                    = chiselTypeOf(uR.debug)
+        })
+    })
+
+    debug.valid := debug.reason.asUInt.orR
+
+    debug.reason.orderAddressCAM        := uOrderAddressCAM.debug
+    debug.reason.orderRequestCAM        := uOrderRequestCAM.debug
+    debug.reason.transactionFreeList    := uTransactionFreeList.debug
+    debug.reason.transactionQueue       := uTransactionQueue.debug
+    debug.reason.transactionPayload     := uTransactionPayload.debug
+    debug.reason.chiRXREQ               := uRXREQ.debug
+    debug.reason.chiRXDAT               := uRXDAT.debug
+    debug.reason.chiTXRSP               := uTXRSP.debug
+    debug.reason.chiTXDAT               := uTXDAT.debug
+    debug.reason.axiB                   := uB.debug
+    debug.reason.axiR                   := uR.debug
 }
