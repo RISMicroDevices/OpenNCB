@@ -231,7 +231,19 @@ class NCBUpstreamTXDAT(val uLinkActiveManager       : CHILinkActiveManagerTX,
                 0.U
         }
         regTXDATFlitPend.flit.CCID          .get := io.queue.operandRead.bits.Addr(5, 4)
-        regTXDATFlitPend.flit.DataID        .get := OHToUInt(io.queue.operandRead.bits.Critical)
+        regTXDATFlitPend.flit.DataID        .get := {
+            if (paramMaxBeatCount == 1)
+                0.U
+            else if (paramMaxBeatCount == 2)
+                OHToUInt(io.queue.operandRead.bits.Critical) << 1
+            else if (paramMaxBeatCount == 4)
+                OHToUInt(io.queue.operandRead.bits.Critical)
+            else
+            {
+                require(false, s"NCB Internal Error: unsupported TXDAT max beat count ${paramMaxBeatCount}")
+                0.U
+            }
+        }
         regTXDATFlitPend.flit.TraceTag      .get := 0.U
         regTXDATFlitPend.flit.BE            .get := 0.U
         regTXDATFlitPend.flit.Data          .get := io.payloadRead.data
