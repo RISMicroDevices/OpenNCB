@@ -19,6 +19,9 @@ package object intf {
 
             src.txlinkactiveack := dst.txlinkactiveack
             dst.txlinkactivereq := src.txlinkactivereq
+
+            src.rxsactive   := dst.rxsactive
+            dst.txsactive   := src.txsactive
         }
     }
 
@@ -36,6 +39,9 @@ package object intf {
 
             src.txlinkactiveack := dst.txlinkactiveack
             dst.txlinkactivereq := src.txlinkactivereq
+
+            src.rxsactive   := dst.rxsactive
+            dst.txsactive   := src.txsactive
         }
     }
 }
