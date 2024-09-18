@@ -97,7 +97,7 @@ class NCBTransactionFreeList(implicit val p: Parameters)
     io.allocate.strb    := logicFreeOut
 
     // empty signal
-    io.empty    := !regFree.asUInt.andR
+    io.empty    := regFree.asUInt.andR
 
 
     // assertions & debugs
