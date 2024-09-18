@@ -22,6 +22,7 @@ import cc.xiangshan.openncb.chi.field.EnumCHIFieldOrder
 import cc.xiangshan.openncb.logical.chi.CHILinkCreditManagerRX
 import cc.xiangshan.openncb.logical.chi.CHILinkActiveManagerRX
 import cc.xiangshan.openncb.util.XZBarrier
+import cc.xiangshan.openncb.util.ValidMux
 import cc.xiangshan.openncb.debug.CompanionConnection
 import cc.xiangshan.openncb.debug.DebugBundle
 import cc.xiangshan.openncb.debug.DebugSignal
@@ -843,7 +844,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         CHIFieldMemAttr.Allocate,
         CHIFieldMemAttr.Cacheable
     ).map(memAttr => {
-        val debugWireIllegalMemAttr = memAttr.is(regRXREQ.flit.MemAttr.get)
+        val debugWireIllegalMemAttr = ValidMux(regRXREQ.flitv, memAttr.is(regRXREQ.flit.MemAttr.get))
 
         assert(!debugWireIllegalMemAttr,
             s"illegal MemAttr asserted: ${memAttr.displayName}")
