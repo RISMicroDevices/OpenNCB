@@ -617,6 +617,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
 
         resetValue.valid    := false.B
         resetValue.bits     := DontCare
+        resetValue.bits.op  := 0.U.asTypeOf(chiselTypeOf(resetValue.bits.op))
 
         resetValue
     }))
