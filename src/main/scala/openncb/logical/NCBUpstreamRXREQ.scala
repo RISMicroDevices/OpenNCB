@@ -445,7 +445,8 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     // allocate CHI operation 'ReadReceipt'
     io.queueAllocate.bits.op.chi.ReadReceipt.valid  := (
         logicTransactionRead
-    ) && CHIFieldOrder.RequestAccepted.is(regRXREQ)
+    ) && (CHIFieldOrder.RequestAccepted.is(regRXREQ)
+      || (CHIFieldOrder.EndpointOrder.is(regRXREQ) && paramNCB.acceptOrderEndpoint.B))
 
     io.queueAllocate.bits.op.chi.ReadReceipt.barrier.AXIARready := (
         paramNCB.readReceiptAfterAcception.B
@@ -650,6 +651,13 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         }
     }
 
+    io.queueAllocate.bits.operand.axi.Device    := {
+        if (paramNCB.acceptMemAttrDevice)
+            CHIFieldMemAttr.Device.is(regRXREQ)
+        else
+            DontCare
+    }
+
     io.queueAllocate.bits.operand.axi.Critical  := VecInit({
 
         if (paramDownstreamMaxBeatCount > 1)
@@ -760,14 +768,19 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         VecInit(
             (EnumCHIFieldOrder.all -= CHIFieldOrder.NoOrdering).toSeq
         .map(order => {
-            val debugWireWriteWithIllegalOrder = uDecoder.is(opcode) &&
-                order.U === regRXREQ.flit.Order.get
+            if (paramNCB.acceptOrderEndpoint && order == CHIFieldOrder.EndpointOrder) {
+                false.B
+            } else {
 
-            assert(!debugWireWriteWithIllegalOrder,
-                s"illegal Order of write transaction: ${opcode.name} with: ${order.displayName}")
+                val debugWireWriteWithIllegalOrder = uDecoder.is(opcode) &&
+                    order.U === regRXREQ.flit.Order.get
 
-            dontTouch(debugWireWriteWithIllegalOrder.suggestName(
-                s"${opcode.name}_${order.name()}"))
+                assert(!debugWireWriteWithIllegalOrder,
+                    s"illegal Order of write transaction: ${opcode.name} with: ${order.displayName}")
+
+                dontTouch(debugWireWriteWithIllegalOrder.suggestName(
+                    s"${opcode.name}_${order.name()}"))
+            }
         })).asUInt.orR
     })).asUInt.orR)
 
@@ -784,14 +797,19 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
             (EnumCHIFieldOrder.all -= CHIFieldOrder.NoOrdering
                                    -= CHIFieldOrder.RequestAccepted).toSeq
         .map(order => {
-            val debugWireReadWithIllegalOrder = uDecoder.is(opcode) &&
-                order.U === regRXREQ.flit.Order.get
+            if (paramNCB.acceptOrderEndpoint && order == CHIFieldOrder.EndpointOrder) {
+                false.B
+            } else {
 
-            assert(!debugWireReadWithIllegalOrder,
-                s"illegal Order of read transaction: ${opcode.name} with: ${order.displayName}")
+                val debugWireReadWithIllegalOrder = uDecoder.is(opcode) &&
+                    order.U === regRXREQ.flit.Order.get
 
-            dontTouch(debugWireReadWithIllegalOrder.suggestName(
-                s"${opcode.name}_${order.name()}"))
+                assert(!debugWireReadWithIllegalOrder,
+                    s"illegal Order of read transaction: ${opcode.name} with: ${order.displayName}")
+
+                dontTouch(debugWireReadWithIllegalOrder.suggestName(
+                    s"${opcode.name}_${order.name()}"))
+            }
         })).asUInt.orR
     })).asUInt.orR)
 
@@ -840,17 +858,22 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     *   'Device', 'Allocate' and 'Cacheable' are not legal.
     */
     debug.IllegalMemAttr := XZBarrier(regRXREQ.flitv, VecInit(Seq(
-        CHIFieldMemAttr.Device,
-        CHIFieldMemAttr.Allocate,
-        CHIFieldMemAttr.Cacheable
+        if (paramNCB.acceptMemAttrDevice  ) None else Some(CHIFieldMemAttr.Device),
+        if (paramNCB.acceptMemAttrAllocate) None else Some(CHIFieldMemAttr.Allocate),
+                                                      Some(CHIFieldMemAttr.Cacheable)
     ).map(memAttr => {
-        val debugWireIllegalMemAttr = ValidMux(regRXREQ.flitv, memAttr.is(regRXREQ.flit.MemAttr.get))
+        if (memAttr.isDefined) {
+            
+            val debugWireIllegalMemAttr = ValidMux(regRXREQ.flitv, memAttr.get.is(regRXREQ))
 
-        assert(!debugWireIllegalMemAttr,
-            s"illegal MemAttr asserted: ${memAttr.displayName}")
+            assert(!debugWireIllegalMemAttr,
+                s"illegal MemAttr asserted: ${memAttr.get.displayName}")
 
-        dontTouch(debugWireIllegalMemAttr.suggestName(
-            s"${memAttr.displayName}"))
+            dontTouch(debugWireIllegalMemAttr.suggestName(
+                s"${memAttr.get.displayName}"))
+        } else {
+            false.B
+        }
     })).asUInt.orR)
 
     /*
