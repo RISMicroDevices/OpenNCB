@@ -158,6 +158,7 @@ class NCBTransactionQueue(implicit val p: Parameters)
         val Burst           = UInt(AXI4FieldAxBURST.width.W)
         val Size            = UInt(AXI4FieldAxSIZE.width.W)
         val Len             = UInt(8.W)
+        val Device          = Bool()
         //
         val Critical        = Vec(paramDownstreamMaxBeatCount, Bool())
         val Count           = UInt(paramDownstreamMaxBeatCountWidth.W)
