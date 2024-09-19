@@ -1,6 +1,7 @@
 package cc.xiangshan.openncb.logical
 
 import chisel3._
+import chisel3.util.Cat
 import chisel3.util.OHToUInt
 import org.chipsalliance.cde.config.Parameters
 import org.chipsalliance.cde.config.Field
@@ -126,12 +127,22 @@ class NCBDownstreamAR(val uTransactionAgeMatrix : NCBTransactionAgeMatrix,
     wireSpillAR.bits.size   := io.queue.operandRead.bits.Size
     wireSpillAR.bits.burst  := io.queue.operandRead.bits.Burst
     wireSpillAR.bits.lock   := 0.U
-    wireSpillAR.bits.cache  := {
-        if (paramNCB.axiARBufferable)
-            "b0011".U
-        else
-            "b0010".U
-    }
+    wireSpillAR.bits.cache  := Cat(
+        0.U(2.W), {
+            // Modifiable
+            if (paramNCB.acceptMemAttrDevice) {
+                Mux(io.queue.operandRead.bits.Device, 0.U, 1.U)
+            } else {
+                1.U
+            }
+        }, {
+            // Bufferable
+            if (paramNCB.axiARBufferable)
+                1.U(1.W)
+            else
+                0.U(1.W)
+        }
+    )
     wireSpillAR.bits.prot   := "b010".U
     wireSpillAR.bits.qos    := {
         if (paramNCB.axiConstantARQoS)
