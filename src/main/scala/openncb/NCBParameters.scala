@@ -224,6 +224,75 @@ case class NCBParameters (
     */
     axiAWAfterFirstData         : Boolean               = false,
 
+    /*
+    * acceptMemAttrAllocate: Configure whether the upstream CHI channel accepts transactions
+    *                        with MemAttr of Allocate.
+    * 
+    * * By default, {@code acceptMemAttrAllocate} is set to {@value false}.
+    * 
+    * * According to CHI specification, memory attribute Allocate was not allowed to be 
+    *   asserted on SN-F port. 
+    *   When {@code acceptMemAttrAllocate} was set to {@value true}, the guarding assertion
+    *   would be disabled, and memory attribute Allocate in transactions would be simply
+    *   ignored on receiving.
+    */
+    acceptMemAttrAllocate       : Boolean               = false,
+
+    /*
+    * acceptMemAttrDevice: Configure whether the upstream CHI channel accepts transactions
+    *                      with MemAttr of Device.
+    * 
+    * * By default, {@code acceptMemAttrDevice} is set to {@value false}.
+    * 
+    * * According to CHI specification, memory attribute Device was not allowed to be
+    *   asserted on SN-F port.
+    *   When {@code acceptMemAttrDevice} was set to {@value true}, the guarding assertion
+    *   would be disabled, and memory attribute Device in transactions would be simply
+    *   ignored on receiving.
+    * 
+    * * This might be useful on connecting NCB SN-F port directly to MMIO-bound RN-F port,
+    *   which should be connected to a Home Node with SN-I downstream ports.
+    */
+    acceptMemAttrDevice         : Boolean               = false,
+
+    /*
+    * acceptOrderEndpoint: Configure whether the upstream CHI channel accepts transactions
+    *                      with Order of Endpoint Order.
+    * 
+    * * By default, {@code acceptOrderEndpoint} is set to {@value false}.
+    * 
+    * * According to CHI specification, order Endpoint Order was not allowed to be
+    *   asserted on SN-F port.
+    *   When {@code acceptOrderEndpoint} was set to {@value true}, the guarding assertion
+    *   would be disabled, and order Endpoint Order in transactions would be converted
+    *   to order Read Accepted, with requirement of {@code readReceiptAfterAcception} set
+    *   to {@value true}.
+    * 
+    * * This might be useful on connecting NCB SN-F port directly to MMIO-bound RN-F port,
+    *   which should be connected to a Home Node with SN-I downstream ports.
+    */
+    acceptOrderEndpoint         : Boolean               = false,
+
+    /* 
+    * asEndpoint: Configure whether this bridge could be recognized as an Endpoint in system.
+    * 
+    * * By default, {@code accept}
+    * 
+    * * When {@code asEndpoint} was set to {@value true}, it was indicated that this bridge
+    *   could be recognized as a single Endpoint instance in the bus system, and all bridge
+    *   master order {@code axiMasterOrder} was allowed.
+    *   Otherwise, only {@value None} was allowed for.
+    * 
+    * * {@code asEndpoint} must be set to false when this bridge could not be recognized as a
+    *   single Endpoint, for example, when multiple bridges, connecting different upstream nodes
+    *   with access each to overlapping address spaces or domains, was connected to the same 
+    *   downstream bus address space or domain.
+    * 
+    * * This might be useful on connecting NCB SN-F port directly to MMIO-bound RN-F port,
+    *   which should be connected to a Home Node with SN-I downstream ports.
+    */
+    asEndpoint                  : Boolean               = true,
+
 
     // AXI side - AR channel
     /* 
@@ -296,6 +365,16 @@ case class NCBParameters (
     require(outstandingDepth >= 1 && outstandingDepth <= 15, 
         s"The legal value for 'outstandingDepth' was 1 to 15, by the AMBA CHI specification: " +
         s"outstandingDepth = ${outstandingDepth}")
+
+    if (acceptOrderEndpoint)
+        require(readReceiptAfterAcception,
+            s"The 'readReceiptAfterAcception' was only allowed to be true when 'acceptOrderEndpoint' was true: " +
+            s"readReceiptAfterAcception = ${readReceiptAfterAcception}");
+
+    if (!asEndpoint)
+        require(axiMasterOrder == EnumAXIMasterOrder.None,
+            s"The 'axiMasterOrder' was only allowed to be None when 'asEndpoint' was false: " +
+            s"axiMasterOrder = ${axiMasterOrder.name()}");
 
     //
     def outstandingIndexWidth: Int  = log2Up(outstandingDepth)
