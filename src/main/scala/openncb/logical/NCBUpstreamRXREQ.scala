@@ -558,96 +558,204 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
 
 
     // convert to AXI operands
-    io.queueAllocate.bits.operand.axi.Addr  := regRXREQ.flit.Addr.get
+    if (!paramNCB.axiBurstAlwaysIncr)
+        io.queueAllocate.bits.operand.axi.Addr  := regRXREQ.flit.Addr.get
+    else
+    {
+        // *NOTICE: Starting address of AXI INCR transfers needed to be re-aligend
+        //          to the boundary of transfer size.
+        //          This is because that, in CHI, the unaligned transfers were
+        //          always wrapped around the address bound, but not for those
+        //          INCR transfers in AXI.
+        //
+        // *WARNING: Unaligned CHI wrapping around transactions with Device attribute
+        //           might could not be handled correctly here.
+        //           With forced INCR burst, the original address information of Device
+        //           transactions might be altered or dropped, leading to unexpected
+        //           and undefined behaviours.
+        //           Careful on implementing a special system that might rely on unaligned
+        //           addresses to work.
+        //           Use 'acceptMisalignedAroundDevice' to disable check.
+    }
 
     when (CHIFieldSize.Size1B.is(regRXREQ)) {
-        io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := regRXREQ.flit.Addr.get
+
         io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size1B.U
         io.queueAllocate.bits.operand.axi.Len   := 0.U
 
+        if (!paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        else
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+        
     }.elsewhen (CHIFieldSize.Size2B.is(regRXREQ)) {
-        io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 1, 0.U(1.W))
+
         io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size2B.U
         io.queueAllocate.bits.operand.axi.Len   := 0.U
 
+        if (!paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        else
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+        
     }.elsewhen (CHIFieldSize.Size4B.is(regRXREQ)) {
-        io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 2, 0.U(2.W))
+
         io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size4B.U
         io.queueAllocate.bits.operand.axi.Len   := 0.U
 
+        if (!paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+        else
+            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+        
     }.elsewhen (CHIFieldSize.Size8B.is(regRXREQ)) {
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 3, 0.U(3.W))
+
         if (paramAXI4.dataWidth == 32) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size4B.U
             io.queueAllocate.bits.operand.axi.Len   := 1.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+            
         } else {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size8B.U
             io.queueAllocate.bits.operand.axi.Len   := 0.U
+
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
         }
     }.elsewhen (CHIFieldSize.Size16B.is(regRXREQ)) {
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 4, 0.U(4.W))
+
         if (paramAXI4.dataWidth == 32) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size4B.U
             io.queueAllocate.bits.operand.axi.Len   := 3.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 64) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size8B.U
             io.queueAllocate.bits.operand.axi.Len   := 1.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size16B.U
             io.queueAllocate.bits.operand.axi.Len   := 0.U
+            
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
         }
     }.elsewhen (CHIFieldSize.Size32B.is(regRXREQ)) {
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 5, 0.U(5.W))
+        
         if (paramAXI4.dataWidth == 32) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size4B.U
             io.queueAllocate.bits.operand.axi.Len   := 7.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 64) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size8B.U
             io.queueAllocate.bits.operand.axi.Len   := 3.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 128) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size16B.U
             io.queueAllocate.bits.operand.axi.Len   := 1.U
+
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
 
         } else {
             io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size32B.U
             io.queueAllocate.bits.operand.axi.Len   := 0.U
+
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
         }
     }.otherwise /*(CHIFieldSize.Size64B.is(regRXREQ))*/ {
+        if (paramNCB.axiBurstAlwaysIncr)
+            io.queueAllocate.bits.operand.axi.Addr  := Cat(regRXREQ.flit.Addr.get >> 6, 0.U(6.W))
+
         if (paramAXI4.dataWidth == 32) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size4B.U
             io.queueAllocate.bits.operand.axi.Len   := 15.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 64) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size8B.U
             io.queueAllocate.bits.operand.axi.Len   := 7.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 128) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size16B.U
             io.queueAllocate.bits.operand.axi.Len   := 3.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else if (paramAXI4.dataWidth == 256) {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size32B.U
             io.queueAllocate.bits.operand.axi.Len   := 1.U
 
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.WRAP.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
+
         } else {
-            io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
             io.queueAllocate.bits.operand.axi.Size  := AXI4FieldAxSIZE.Size64B.U
             io.queueAllocate.bits.operand.axi.Len   := 0.U
+
+            if (!paramNCB.axiBurstAlwaysIncr)
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.FIXED.U
+            else
+                io.queueAllocate.bits.operand.axi.Burst := AXI4FieldAxBURST.INCR.U
         }
     }
 
@@ -661,9 +769,14 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.operand.axi.Critical  := VecInit({
 
         if (paramDownstreamMaxBeatCount > 1)
-            (0 until paramDownstreamMaxBeatCount).map(i => {
-                regRXREQ.flit.Addr.get(5, 6 - paramDownstreamMaxBeatCountWidth) === i.U
-            })
+            if (paramNCB.axiBurstAlwaysIncr)
+                (0 until paramDownstreamMaxBeatCount).map(i => {
+                    (i == 0).B
+                })
+            else
+                (0 until paramDownstreamMaxBeatCount).map(i => {
+                    regRXREQ.flit.Addr.get(5, 6 - paramDownstreamMaxBeatCountWidth) === i.U
+                })
         else
             Seq(true.B)
     })
@@ -692,6 +805,7 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
         val NonZeroExcl                         = Output(Bool())
         val NonZeroExpCompAck                   = Output(Bool())
         val IllegalSize                         = Output(Bool())
+        val MisalignedAroundDevice              = Output(Bool())
 
         // submodule
         val linkCredit                          = chiselTypeOf(uLinkCredit.debug)
@@ -913,4 +1027,26 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
                                                       !CHIFieldSize.Size64B.is(regRXREQ))
     assert(!debug.IllegalSize,
         "illegal Size with reserved value")
+
+    /*
+    * @assertion MisalignedAroundDevice
+    *   Address misalignment around address with memory attribute 'Device'.
+    */
+    if (!paramNCB.axiBurstAlwaysIncr || paramNCB.acceptMisalignedAroundDevice)
+        debug.MisalignedAroundDevice := false.B
+    else {
+        debug.MisalignedAroundDevice := XZBarrier(regRXREQ.flitv, {
+            MuxCase(false.B, Seq(
+                CHIFieldSize.Size1B .is(regRXREQ)   -> false.B,
+                CHIFieldSize.Size2B .is(regRXREQ)   -> regRXREQ.flit.Addr.get(0, 0).orR,
+                CHIFieldSize.Size4B .is(regRXREQ)   -> regRXREQ.flit.Addr.get(1, 0).orR,
+                CHIFieldSize.Size8B .is(regRXREQ)   -> regRXREQ.flit.Addr.get(2, 0).orR,
+                CHIFieldSize.Size16B.is(regRXREQ)   -> regRXREQ.flit.Addr.get(3, 0).orR,
+                CHIFieldSize.Size32B.is(regRXREQ)   -> regRXREQ.flit.Addr.get(4, 0).orR,
+                CHIFieldSize.Size64B.is(regRXREQ)   -> regRXREQ.flit.Addr.get(5, 0).orR
+            ))
+        })
+    }
+    assert(!debug.MisalignedAroundDevice,
+        "misalignment around device address on INCR burst")
 }
