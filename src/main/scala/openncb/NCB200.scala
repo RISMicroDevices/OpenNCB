@@ -151,6 +151,8 @@ class NCB200(implicit val p: Parameters)
         })
     })
 
+    dontTouch(debug)
+
     debug.valid := debug.reason.asUInt.orR
 
     debug.reason.orderAddressCAM        := uOrderAddressCAM.debug
