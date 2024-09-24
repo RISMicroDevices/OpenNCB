@@ -529,9 +529,14 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.operand.chi.Critical  := VecInit({
 
         if (paramUpstreamMaxBeatCount > 1)
-            (0 until paramUpstreamMaxBeatCount).map(i => {
-                regRXREQ.flit.Addr.get(5, 6 - paramUpstreamMaxBeatCountWidth) === i.U
-            })
+            if (paramNCB.axiBurstAlwaysIncr)
+                (0 until paramUpstreamMaxBeatCount).map(i => {
+                    (i == 0).B
+                })
+            else
+                (0 until paramUpstreamMaxBeatCount).map(i => {
+                    regRXREQ.flit.Addr.get(5, 6 - paramUpstreamMaxBeatCountWidth) === i.U
+                })
         else
             Seq(true.B)
     })
