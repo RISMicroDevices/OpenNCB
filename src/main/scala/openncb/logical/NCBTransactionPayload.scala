@@ -169,11 +169,14 @@ class NCBTransactionPayload(implicit val p: Parameters)
     * @io input     upload  : Allocation Direction, 'Upload' when asserted, otherwise 'Download'.
     *                         - Upload   : AXI to CHI
     *                         - Download : CHI to AXI
+    * @io input     mask    : Allocation Valid Mask, only masked segments were needed to be read,
+    *                         applying to Downstream (AXI to CHI) Valid Registers.
     */
     class AllocatePort extends Bundle {
         val en              = Input(Bool())
         val strb            = Input(Vec(paramPayloadCapacity, Bool()))
         val upload          = Input(Bool())
+        val mask            = Input(Vec(paramDownstreamMaxBeatCount, Bool()))
     }
 
     /*
@@ -235,7 +238,7 @@ class NCBTransactionPayload(implicit val p: Parameters)
     (0 until paramPayloadCapacity).foreach(i => {
 
         when (io.allocate.en & io.allocate.strb(i)) {
-            regDownstreamValid(i) := VecInit.fill(paramDownstreamMaxBeatCount)(false.B)
+            regDownstreamValid(i) := VecInit(io.allocate.mask.map(~_))
         }
 
         (0 until paramDownstreamMaxBeatCount).foreach(j => {
