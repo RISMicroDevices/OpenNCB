@@ -321,9 +321,62 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
 
 
     // payload allocation
+    require(CHIConstants.CHI_MAX_PACKET_DATA_BITS_WIDTH == 512,
+        s"unsupported CHI packet max size ${CHIConstants.CHI_MAX_PACKET_DATA_BITS_WIDTH}" +
+        " for TransactionPayload allocation logic")
+
     io.payloadAllocate.en       := regRXREQ.flitv & !logicLCrdReturn
     io.payloadAllocate.strb     := io.freeListAllocate.strb
     io.payloadAllocate.upload   := logicTransactionRead
+    io.payloadAllocate.mask     := {
+        if (paramAXI4.dataWidth == 512) {
+            VecInit.fill(1)(true.B)
+        } else if (paramAXI4.dataWidth == 256) {
+            MuxCase(VecInit((0 until 2).map(i => regRXREQ.flit.Addr.get(5, 5) === i.U)), Seq((
+                CHIFieldSize.Size64B.is(regRXREQ)   -> {
+                    VecInit.fill(2)(true.B)
+                }
+            )))
+        } else if (paramAXI4.dataWidth == 128) {
+            MuxCase(VecInit((0 until 4).map(i => regRXREQ.flit.Addr.get(5, 4) === i.U)), Seq(
+                CHIFieldSize.Size64B.is(regRXREQ)   -> {
+                    VecInit.fill(4)(true.B)
+                },
+                CHIFieldSize.Size32B.is(regRXREQ)   -> {
+                    VecInit((0 until 4).map(i => regRXREQ.flit.Addr.get(5, 5) === (i >> 1).U))
+                }
+            ))
+        } else if (paramAXI4.dataWidth == 64) {
+            MuxCase(VecInit((0 until 8).map(i => regRXREQ.flit.Addr.get(5, 3) === i.U)), Seq(
+                CHIFieldSize.Size64B.is(regRXREQ)   -> {
+                    VecInit.fill(8)(true.B)
+                },
+                CHIFieldSize.Size32B.is(regRXREQ)   -> {
+                    VecInit((0 until 8).map(i => regRXREQ.flit.Addr.get(5, 5) === (i >> 2).U))
+                },
+                CHIFieldSize.Size16B.is(regRXREQ)   -> {
+                    VecInit((0 until 8).map(i => regRXREQ.flit.Addr.get(5, 4) === (i >> 1).U))
+                }
+            ))
+        } else if (paramAXI4.dataWidth == 32) {
+            MuxCase(VecInit((0 until 16).map(i => regRXREQ.flit.Addr.get(5, 2) === i.U)), Seq(
+                CHIFieldSize.Size64B.is(regRXREQ)   -> {
+                    VecInit.fill(16)(true.B)
+                },
+                CHIFieldSize.Size32B.is(regRXREQ)   -> {
+                    VecInit((0 until 16).map(i => regRXREQ.flit.Addr.get(5, 5) === (i >> 3).U))
+                },
+                CHIFieldSize.Size16B.is(regRXREQ)   -> {
+                    VecInit((0 until 16).map(i => regRXREQ.flit.Addr.get(5, 4) === (i >> 2).U))
+                },
+                CHIFieldSize.Size8B .is(regRXREQ)   -> {
+                    VecInit((0 until 16).map(i => regRXREQ.flit.Addr.get(5, 3) === (i >> 1).U))
+                }
+            ))
+        } else {
+            throw new IllegalArgumentException(s"unsupported AXI data width: ${paramAXI4.dataWidth}")
+        }
+    }
 
     // age matrix update
     io.ageUpdate.en     := regRXREQ.flitv & !logicLCrdReturn
@@ -529,14 +582,9 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.operand.chi.Critical  := VecInit({
 
         if (paramUpstreamMaxBeatCount > 1)
-            if (paramNCB.axiBurstAlwaysIncr)
-                (0 until paramUpstreamMaxBeatCount).map(i => {
-                    (i == 0).B
-                })
-            else
-                (0 until paramUpstreamMaxBeatCount).map(i => {
-                    regRXREQ.flit.Addr.get(5, 6 - paramUpstreamMaxBeatCountWidth) === i.U
-                })
+            (0 until paramUpstreamMaxBeatCount).map(i => {
+                io.queueAllocate.bits.operand.chi.Addr(5, 6 - paramUpstreamMaxBeatCountWidth) === i.U
+            })
         else
             Seq(true.B)
     })
@@ -774,14 +822,9 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     io.queueAllocate.bits.operand.axi.Critical  := VecInit({
 
         if (paramDownstreamMaxBeatCount > 1)
-            if (paramNCB.axiBurstAlwaysIncr)
-                (0 until paramDownstreamMaxBeatCount).map(i => {
-                    (i == 0).B
-                })
-            else
-                (0 until paramDownstreamMaxBeatCount).map(i => {
-                    regRXREQ.flit.Addr.get(5, 6 - paramDownstreamMaxBeatCountWidth) === i.U
-                })
+            (0 until paramDownstreamMaxBeatCount).map(i => {
+                io.queueAllocate.bits.operand.axi.Addr(5, 6 - paramDownstreamMaxBeatCountWidth) === i.U
+            })
         else
             Seq(true.B)
     })
