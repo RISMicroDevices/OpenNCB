@@ -139,15 +139,25 @@ case class NCBParameters (
     * acceptMemAttrAllocate: Configure whether the upstream CHI channel accepts transactions
     *                        with MemAttr of Allocate.
     * 
-    * * By default, {@code acceptMemAttrAllocate} is set to {@value false}.
+    * * By default, {@code acceptMemAttrAllocate} is set to {@value true}.
     * 
-    * * According to CHI specification, memory attribute Allocate was not allowed to be 
-    *   asserted on SN-F port. 
     *   When {@code acceptMemAttrAllocate} was set to {@value true}, the guarding assertion
     *   would be disabled, and memory attribute Allocate in transactions would be simply
     *   ignored on receiving.
     */
-    acceptMemAttrAllocate       : Boolean               = false,
+    acceptMemAttrAllocate       : Boolean               = true,
+
+    /*
+    * acceptMemAttrCacheable: Configure whether the upstream CHI channel accepts transactions
+    *                         with MemAttr of Allocate.
+    * 
+    * * By default, {@code acceptMemAttrCacheable} is set to {@value true}.
+    * 
+    *   When {@code acceptMemAttrCacheable} was set to {@value true}, the guarding assertion
+    *   would be disabled, and memory attribute Cacheable in transactions would be simply
+    *   ignored on receiving.
+    */
+    acceptMemAttrCacheable      : Boolean               = true,
 
     /*
     * acceptMemAttrDevice: Configure whether the upstream CHI channel accepts transactions
