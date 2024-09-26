@@ -1020,13 +1020,24 @@ class NCBUpstreamRXREQ(val uLinkActiveManager       : CHILinkActiveManagerRX,
     *   'Device', 'Allocate' and 'Cacheable' are not legal.
     */
     debug.IllegalMemAttr := XZBarrier(regRXREQ.flitv, VecInit(Seq(
-        if (paramNCB.acceptMemAttrDevice  ) None else Some(CHIFieldMemAttr.Device),
-        if (paramNCB.acceptMemAttrAllocate) None else Some(CHIFieldMemAttr.Allocate),
-                                                      Some(CHIFieldMemAttr.Cacheable)
+        Some(CHIFieldMemAttr.Device),
+        Some(CHIFieldMemAttr.Allocate),
+        Some(CHIFieldMemAttr.Cacheable)
     ).map(memAttr => {
         if (memAttr.isDefined) {
             
-            val debugWireIllegalMemAttr = ValidMux(regRXREQ.flitv, memAttr.get.is(regRXREQ))
+            val debugWireIllegalMemAttr = ValidMux(regRXREQ.flitv, memAttr.get match {
+                case CHIFieldMemAttr.Device => {
+                    memAttr.get.is(regRXREQ) && !paramNCB.acceptMemAttrDevice.B
+                }
+                case CHIFieldMemAttr.Allocate => {
+                    memAttr.get.is(regRXREQ) && (CHIFieldMemAttr.Device.is(regRXREQ) || !paramNCB.acceptMemAttrAllocate.B)
+                }
+                case CHIFieldMemAttr.Cacheable => {
+                    memAttr.get.is(regRXREQ) && (CHIFieldMemAttr.Device.is(regRXREQ) || !paramNCB.acceptMemAttrCacheable.B)
+                }
+                case _ => memAttr.get.is(regRXREQ)
+            })
 
             assert(!debugWireIllegalMemAttr,
                 s"illegal MemAttr asserted: ${memAttr.get.displayName}")
